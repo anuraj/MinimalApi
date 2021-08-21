@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<TodoDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(setup => setup.SwaggerDoc("v1", new OpenApiInfo()
 {
@@ -35,7 +36,7 @@ app.UseSwagger();
 
 app.MapGet("/todoitems", async ([FromServices] TodoDbContext dbContext) =>
 {
-    await dbContext.TodoItems.ToListAsync();
+    return await dbContext.TodoItems.ToListAsync();
 });
 
 app.MapGet("/todoitems/{id}", async ([FromServices] TodoDbContext dbContext, int id) =>
@@ -60,7 +61,7 @@ app.MapPut("/todoitems/{id}", async ([FromServices] TodoDbContext dbContext, int
 
     todoItem.IsCompleted = inputTodoItem.IsCompleted;
     await dbContext.SaveChangesAsync();
-    return Results.Status(204);
+    return Results.NoContent();
 });
 
 app.MapDelete("/todoitems/{id}", async ([FromServices] TodoDbContext dbContext, int id) =>
@@ -74,7 +75,7 @@ app.MapDelete("/todoitems/{id}", async ([FromServices] TodoDbContext dbContext, 
     dbContext.TodoItems.Remove(todoItem);
     await dbContext.SaveChangesAsync();
 
-    return Results.Status(204);
+    return Results.NoContent();
 });
 
 app.UseSwaggerUI(c =>
@@ -100,35 +101,4 @@ public class TodoItem
     public int Id { get; set; }
     public string Title { get; set; }
     public bool IsCompleted { get; set; }
-}
-
-public static class Results
-{
-    public static IResult NotFound() => new StatusCodeResult(404);
-    public static IResult Ok() => new StatusCodeResult(200);
-    public static IResult Status(int statusCode)
-        => new StatusCodeResult(statusCode);
-    public static IResult Ok(object value) => new JsonResult(value);
-    public static IResult Created(string location, object value)
-        => new CreatedResult(location, value);
-
-    private class CreatedResult : IResult
-    {
-        private readonly object _value;
-        private readonly string _location;
-
-        public CreatedResult(string location, object value)
-        {
-            _location = location;
-            _value = value;
-        }
-
-        public Task ExecuteAsync(HttpContext httpContext)
-        {
-            httpContext.Response.StatusCode = StatusCodes.Status201Created;
-            httpContext.Response.Headers.Location = _location;
-
-            return httpContext.Response.WriteAsJsonAsync(_value);
-        }
-    }
 }
