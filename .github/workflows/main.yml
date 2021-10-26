@@ -40,5 +40,5 @@ jobs:
         run: dotnet ef migrations bundle
       - name: Deploy the Database Changes
         # The bundle command will fail because it is pointing to my local development machine.
-        run: ./bundle
+        run: ./bundle --connection ${{ secrets.CONNECTIONSTRING }}
      
