@@ -35,9 +35,9 @@ jobs:
       - name: Install EF Tool
         run: |
             dotnet new tool-manifest
-            dotnet tool install dotnet-ef --version 6.0.0-preview.7.21378.4
+            dotnet tool install dotnet-ef
       - name: Build dotnet bundle
-        run: dotnet ef migrations bundle
+        run: dotnet ef migrations bundle --verbose
       - name: Deploy the Database Changes
         # The bundle command will fail because it is pointing to my local development machine.
         run: ./bundle --connection ${{ secrets.CONNECTIONSTRING }}
