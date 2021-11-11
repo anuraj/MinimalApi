@@ -47,7 +47,7 @@ app.MapPost("/todoitems", async (TodoDbContext dbContext, TodoItem todoItem) =>
     dbContext.TodoItems.Add(todoItem);
     await dbContext.SaveChangesAsync();
     return Results.Created($"/todoitems/{todoItem.Id}", todoItem);
-}).WithTags(new[] { "Create", "CRUD" });
+}).WithTags(new[] { "Create", "CRUD" }).Accepts<TodoItem>("application/json").Produces(201, typeof(TodoItem));
 
 app.MapPut("/todoitems/{id}", async (TodoDbContext dbContext, int id, TodoItem inputTodoItem) =>
 {
@@ -59,7 +59,7 @@ app.MapPut("/todoitems/{id}", async (TodoDbContext dbContext, int id, TodoItem i
     }
 
     return Results.NotFound();
-}).WithTags(new[] { "Update", "CRUD" });
+}).WithTags(new[] { "Update", "CRUD" }).Accepts<TodoItem>("application/json").Produces(201, typeof(TodoItem)).ProducesProblem(404);
 
 app.MapDelete("/todoitems/{id}", async (TodoDbContext dbContext, int id) =>
 {
@@ -71,13 +71,13 @@ app.MapDelete("/todoitems/{id}", async (TodoDbContext dbContext, int id) =>
     }
 
     return Results.NotFound();
-}).WithTags(new[] { "Delete", "CRUD" });
+}).WithTags(new[] { "Delete", "CRUD" }).Accepts<TodoItem>("application/json").Produces(201, typeof(TodoItem)).ProducesProblem(404);
 
 app.MapGet("/health", async (HealthCheckService healthCheckService) =>
 {
     var report = await healthCheckService.CheckHealthAsync();
     return report.Status == HealthStatus.Healthy ? Results.Ok(report) : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-}).WithTags(new[] { "Health" });
+}).WithTags(new[] { "Health" }).Produces(200).ProducesProblem(503);
 
 app.MapGet("/todoitems/history", async (TodoDbContext dbContext) => await dbContext.TodoItems
     .TemporalAll()
