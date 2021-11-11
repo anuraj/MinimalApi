@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 
 using System;
-using System.Threading.Tasks;
-
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<TodoDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -25,6 +26,8 @@ builder.Services.AddSwaggerGen(setup => setup.SwaggerDoc("v1", new OpenApiInfo()
     }
 }));
 
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddHealthChecks().AddDbContextCheck<TodoDbContext>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -34,49 +37,59 @@ if (app.Environment.IsDevelopment())
 
 app.UseSwagger();
 
-app.MapGet("/todoitems", async ([FromServices] TodoDbContext dbContext) =>
-{
-    return await dbContext.TodoItems.ToListAsync();
-});
+app.MapGet("/todoitems", async (TodoDbContext dbContext) => await dbContext.TodoItems.ToListAsync()).WithTags(new[] { "Read", "CRUD" });
 
-app.MapGet("/todoitems/{id}", async ([FromServices] TodoDbContext dbContext, int id) =>
-{
-    return await dbContext.TodoItems.FindAsync(id) is TodoItem todo ? Results.Ok(todo) : Results.NotFound();
-});
+app.MapGet("/todoitems/{id}", async (TodoDbContext dbContext, int id) =>
+    await dbContext.TodoItems.FindAsync(id) is TodoItem todo ? Results.Ok(todo) : Results.NotFound()).WithTags(new[] { "Read", "ReadOne", "CRUD" });
 
-app.MapPost("/todoitems", async ([FromServices] TodoDbContext dbContext, TodoItem todoItem) =>
+app.MapPost("/todoitems", async (TodoDbContext dbContext, TodoItem todoItem) =>
 {
     dbContext.TodoItems.Add(todoItem);
     await dbContext.SaveChangesAsync();
     return Results.Created($"/todoitems/{todoItem.Id}", todoItem);
-});
+}).WithTags(new[] { "Create", "CRUD" });
 
-app.MapPut("/todoitems/{id}", async ([FromServices] TodoDbContext dbContext, int id, TodoItem inputTodoItem) =>
+app.MapPut("/todoitems/{id}", async (TodoDbContext dbContext, int id, TodoItem inputTodoItem) =>
 {
-    var todoItem = await dbContext.TodoItems.FindAsync(id);
-    if (todoItem == null)
+    if (await dbContext.TodoItems.FindAsync(id) is TodoItem todoItem)
     {
-        return Results.NotFound();
+        todoItem.IsCompleted = inputTodoItem.IsCompleted;
+        await dbContext.SaveChangesAsync();
+        return Results.NoContent();
     }
 
-    todoItem.IsCompleted = inputTodoItem.IsCompleted;
-    await dbContext.SaveChangesAsync();
-    return Results.NoContent();
-});
+    return Results.NotFound();
+}).WithTags(new[] { "Update", "CRUD" });
 
-app.MapDelete("/todoitems/{id}", async ([FromServices] TodoDbContext dbContext, int id) =>
+app.MapDelete("/todoitems/{id}", async (TodoDbContext dbContext, int id) =>
 {
-    var todoItem = await dbContext.TodoItems.FindAsync(int.Parse(id.ToString()));
-    if (todoItem == null)
+    if (await dbContext.TodoItems.FindAsync(id) is TodoItem todoItem)
     {
-        return Results.NotFound();
+        dbContext.TodoItems.Remove(todoItem);
+        await dbContext.SaveChangesAsync();
+        return Results.NoContent();
     }
 
-    dbContext.TodoItems.Remove(todoItem);
-    await dbContext.SaveChangesAsync();
+    return Results.NotFound();
+}).WithTags(new[] { "Delete", "CRUD" });
 
-    return Results.NoContent();
-});
+app.MapGet("/health", async (HealthCheckService healthCheckService) =>
+{
+    var report = await healthCheckService.CheckHealthAsync();
+    return report.Status == HealthStatus.Healthy ? Results.Ok(report) : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+}).WithTags(new[] { "Health" });
+
+app.MapGet("/todoitems/history", async (TodoDbContext dbContext) => await dbContext.TodoItems
+    .TemporalAll()
+    .OrderBy(todoItem => EF.Property<DateTime>(todoItem, "PeriodStart"))
+    .Select(todoItem => new TodoItemAudit
+    {
+        Title = todoItem.Title,
+        IsCompleted = todoItem.IsCompleted,
+        PeriodStart = EF.Property<DateTime>(todoItem, "PeriodStart"),
+        PeriodEnd = EF.Property<DateTime>(todoItem, "PeriodEnd")
+    })
+    .ToListAsync()).WithTags(new[] { "EF Core Feature" });
 
 app.UseSwaggerUI(c =>
 {
@@ -87,18 +100,29 @@ app.Run();
 
 public class TodoDbContext : DbContext
 {
-    public TodoDbContext(DbContextOptions options) : base(options)
+    public TodoDbContext(DbContextOptions<TodoDbContext> options)
+        : base(options) { }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<TodoItem>().ToTable("TodoItems", t => t.IsTemporal());
     }
 
-    protected TodoDbContext()
-    {
-    }
-    public DbSet<TodoItem> TodoItems { get; set; }
+    public DbSet<TodoItem> TodoItems => Set<TodoItem>();
 }
+
 public class TodoItem
 {
     public int Id { get; set; }
-    public string Title { get; set; }
+    [Required]
+    public string? Title { get; set; }
     public bool IsCompleted { get; set; }
+}
+
+public class TodoItemAudit
+{
+    public string? Title { get; set; }
+    public bool IsCompleted { get; set; }
+    public DateTime PeriodStart { get; set; }
+    public DateTime PeriodEnd { get; set; }
 }
