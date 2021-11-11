@@ -26,9 +26,15 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-}
 
-app.UseSwagger();
+    app.UseSwagger();
+
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo Api v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
 
 app.MapGet("/todoitems", async (TodoDbContext dbContext) => await dbContext.TodoItems.ToListAsync()).WithTags(new[] { "Read", "CRUD" });
 
@@ -84,11 +90,6 @@ app.MapGet("/todoitems/history", async (TodoDbContext dbContext) => await dbCont
     })
     .ToListAsync()).WithTags(new[] { "EF Core Feature" });
 
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo Api v1");
-    c.RoutePrefix = string.Empty;
-});
 app.Run();
 
 public class TodoDbContext : DbContext
