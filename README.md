@@ -4,6 +4,13 @@ Todo API implementation using Minimal API, Entity Framework Core SQL Server Prov
 
 ## Features
 
+### November 14, 2021
+* GraphQL Implementation using HotChocolate
+	- Query
+	- Mutation
+	- Subscription
+	
+### November 11, 2021
 * CRUD operations using Minimal API .NET 6.0 and Sql Server
 * Health Checks implementation for Minimal APIs
 * Open API - Support for Tags
