@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<PackageReference Include="HotChocolate.AspNetCore" Version="12.2.1" />
 		<PackageReference Include="HotChocolate.Data.EntityFramework" Version="12.2.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

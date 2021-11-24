@@ -4,6 +4,9 @@ Todo API implementation using Minimal API, Entity Framework Core SQL Server Prov
 
 ## Features
 
+### November 24, 2021
+* Token Authentication and Open API changes related to that.
+
 ### November 14, 2021
 * GraphQL Implementation using HotChocolate
 	- Query
