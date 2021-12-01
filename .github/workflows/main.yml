@@ -42,4 +42,5 @@ jobs:
         # The bundle command will fail because it is pointing to my local development machine.
         # If you like to deploy - execute the following code. Since I removed the Azure Database, it is commented.
         # run: ./efbundle --connection ${{ secrets.CONNECTIONSTRING }}
+        run: echo "Execute the following command to deploy the migrations - ./efbundle --connection <connection string>"
      
