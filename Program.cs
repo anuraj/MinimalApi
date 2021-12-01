@@ -1,6 +1,7 @@
 using HotChocolate.Subscriptions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
@@ -128,9 +129,10 @@ app.MapGet("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.Au
     using (var dbContext = dbContextFactory.CreateDbContext())
     {
         var user = http.User;
-        return await dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value).ToListAsync();
+        return Results.Ok(await dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value)
+            .Select(t => new TodoItemOutput(t.Title, t.IsCompleted, t.CreatedOn)).ToListAsync());
     }
-}).Produces(200, typeof(List<TodoItem>)).ProducesProblem(401);
+}).Produces(200, typeof(List<TodoItemOutput>)).ProducesProblem(401);
 
 app.MapGet("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id) =>
  {
@@ -141,10 +143,15 @@ app.MapGet("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaul
      }
  }).Produces(200, typeof(TodoItem)).ProducesProblem(401);
 
-app.MapPost("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, TodoItem todoItem) =>
+app.MapPost("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, TodoItemInput todoItemInput) =>
  {
      using (var dbContext = dbContextFactory.CreateDbContext())
      {
+         var todoItem = new TodoItem
+         {
+             Title = todoItemInput.Title,
+             IsCompleted = todoItemInput.IsCompleted,
+         };
          var httpUser = http.User;
          var user = await dbContext.Users.FirstOrDefaultAsync(t => t.Username == httpUser.FindFirst(ClaimTypes.NameIdentifier).Value);
          todoItem.User = user;
@@ -153,23 +160,23 @@ app.MapPost("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.A
          await dbContext.SaveChangesAsync();
          return Results.Created($"/todoitems/{todoItem.Id}", todoItem);
      }
- }).Accepts<TodoItem>("application/json").Produces(201, typeof(TodoItem)).ProducesProblem(401);
+ }).Accepts<TodoItemInput>("application/json").Produces(201, typeof(TodoItemOutput)).ProducesProblem(401);
 
-app.MapPut("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id, TodoItem inputTodoItem) =>
+app.MapPut("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id, TodoItemInput todoItemInput) =>
  {
      using (var dbContext = dbContextFactory.CreateDbContext())
      {
          var user = http.User;
          if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value && t.Id == id) is TodoItem todoItem)
          {
-             todoItem.IsCompleted = inputTodoItem.IsCompleted;
+             todoItem.IsCompleted = todoItemInput.IsCompleted;
              await dbContext.SaveChangesAsync();
              return Results.NoContent();
          }
 
          return Results.NotFound();
      }
- }).Accepts<TodoItem>("application/json").Produces(201, typeof(TodoItem)).ProducesProblem(404).ProducesProblem(401);
+ }).Accepts<TodoItemInput>("application/json").Produces(201, typeof(TodoItemOutput)).ProducesProblem(404).ProducesProblem(401);
 
 app.MapDelete("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id) =>
 {
@@ -185,7 +192,7 @@ app.MapDelete("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDef
 
         return Results.NotFound();
     }
-}).Accepts<TodoItem>("application/json").Produces(201, typeof(TodoItem)).ProducesProblem(404).ProducesProblem(401);
+}).Accepts<TodoItemInput>("application/json").Produces(204).ProducesProblem(404).ProducesProblem(401);
 
 app.MapGet("/health", async (HealthCheckService healthCheckService) =>
 {
@@ -198,18 +205,19 @@ app.MapGet("/todoitems/history", [Authorize(AuthenticationSchemes = JwtBearerDef
      using (var dbContext = dbContextFactory.CreateDbContext())
      {
          var user = http.User;
-         await dbContext.TodoItems.TemporalAll().Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value)
-             .OrderBy(todoItem => EF.Property<DateTime>(todoItem, "PeriodStart"))
-             .Select(todoItem => new TodoItemAudit
-             {
-                 Title = todoItem.Title,
-                 IsCompleted = todoItem.IsCompleted,
-                 PeriodStart = EF.Property<DateTime>(todoItem, "PeriodStart"),
-                 PeriodEnd = EF.Property<DateTime>(todoItem, "PeriodEnd")
-             })
-             .ToListAsync();
+         return Results.Ok(await dbContext.TodoItems.TemporalAsOf(DateTime.UtcNow)
+            .Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value)
+            .OrderBy(todoItem => EF.Property<DateTime>(todoItem, "PeriodStart"))
+            .Select(todoItem => new TodoItemAudit
+            {
+                Title = todoItem.Title,
+                IsCompleted = todoItem.IsCompleted,
+                PeriodStart = EF.Property<DateTime>(todoItem, "PeriodStart"),
+                PeriodEnd = EF.Property<DateTime>(todoItem, "PeriodEnd")
+            })
+            .ToListAsync());
      }
- }).WithTags(new[] { "EF Core Feature" }).ProducesProblem(401);
+ }).Produces<TodoItemAudit>(200).WithTags(new[] { "EF Core Feature" }).ProducesProblem(401);
 
 app.UseRouting();
 app.UseAuthorization();
@@ -229,6 +237,7 @@ public class TodoDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TodoItem>().ToTable("TodoItems", t => t.IsTemporal());
+        modelBuilder.Entity<User>().ToTable("Users", u => u.IsTemporal());
         modelBuilder.Entity<User>().HasData(new User
         {
             Id = 1,
@@ -279,6 +288,7 @@ public class User
 }
 
 public record TodoItemInput(string? Title, bool IsCompleted);
+public record TodoItemOutput(string? Title, bool IsCompleted, DateTime? createdOn);
 
 public class TodoItemAudit
 {
