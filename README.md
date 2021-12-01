@@ -2,7 +2,13 @@
 
 Todo API implementation using Minimal API, Entity Framework Core SQL Server Provider and Open API.
 
+[![CI](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
+
 ## Features
+
+### December 1, 2021
+* Implemented DTO for Input and Output.
+* Bug Fix - the /history endpoint was not returning any data.
 
 ### November 24, 2021
 * Token Authentication and Open API changes related to that.
