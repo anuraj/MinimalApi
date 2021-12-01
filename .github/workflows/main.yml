@@ -40,5 +40,6 @@ jobs:
         run: dotnet ef migrations bundle --verbose
       - name: Deploy the Database Changes
         # The bundle command will fail because it is pointing to my local development machine.
-        run: ./efbundle --connection ${{ secrets.CONNECTIONSTRING }}
+        # If you like to deploy - execute the following code. Since I removed the Azure Database, it is commented.
+        # run: ./efbundle --connection ${{ secrets.CONNECTIONSTRING }}
      
