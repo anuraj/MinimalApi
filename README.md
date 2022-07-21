@@ -2,7 +2,7 @@
 
 Todo API implementation using Minimal API, Entity Framework Core SQL Server Provider and Open API.
 
-[![Build and deploy ASP.Net Core app to Azure Web App - minimalapi-demo](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml)
+[![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml)
 
 ## Features
 
