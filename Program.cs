@@ -1,4 +1,3 @@
-
 using FluentValidation;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,7 +32,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"]))
     };
 });
-builder.Services.AddDbContextFactory<TodoDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContextFactory<TodoDbContext>(options => options.UseInMemoryDatabase($"MinimalApiDb-{Guid.NewGuid()}"));
 
 builder.Services.AddGraphQLServer()
     .AddQueryType<Query>()
@@ -90,47 +89,52 @@ if (app.Environment.IsDevelopment())
 
 app.UseWebSockets();
 
+var scope = app.Services.CreateScope();
+var databaseContext = scope.ServiceProvider.GetService<TodoDbContext>();
+if (databaseContext != null)
+{
+    databaseContext.Database.EnsureCreated();
+}
+
 app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, User inputUser) =>
 {
-    using (var dbContext = dbContextFactory.CreateDbContext())
+    using var dbContext = dbContextFactory.CreateDbContext();
+    if (!string.IsNullOrEmpty(inputUser.Username) &&
+        !string.IsNullOrEmpty(inputUser.Password))
     {
-        if (!string.IsNullOrEmpty(inputUser.Username) &&
-            !string.IsNullOrEmpty(inputUser.Password))
+        var loggedInUser = await dbContext.Users
+            .FirstOrDefaultAsync(user => user.Username == inputUser.Username
+            && user.Password == inputUser.Password);
+        if (loggedInUser == null)
         {
-            var loggedInUser = await dbContext.Users
-                .FirstOrDefaultAsync(user => user.Username == inputUser.Username
-                && user.Password == inputUser.Password);
-            if (loggedInUser == null)
-            {
-                http.Response.StatusCode = 401;
-                return;
-            }
+            http.Response.StatusCode = 401;
+            return;
+        }
 
-            var claims = new[]
-            {
+        var claims = new[]
+        {
                 new Claim(JwtRegisteredClaimNames.Sub, loggedInUser.Username!),
                 new Claim(JwtRegisteredClaimNames.Name, loggedInUser.Username!),
                 new Claim(JwtRegisteredClaimNames.Email, loggedInUser.Email!)
             };
 
-            var token = new JwtSecurityToken
-            (
-                issuer: builder.Configuration["Issuer"],
-                audience: builder.Configuration["Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddDays(60),
-                notBefore: DateTime.UtcNow,
-                signingCredentials: new SigningCredentials(
-                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"])),
-                    SecurityAlgorithms.HmacSha256)
-            );
+        var token = new JwtSecurityToken
+        (
+            issuer: builder.Configuration["Issuer"],
+            audience: builder.Configuration["Audience"],
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(60),
+            notBefore: DateTime.UtcNow,
+            signingCredentials: new SigningCredentials(
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"])),
+                SecurityAlgorithms.HmacSha256)
+        );
 
-            await http.Response.WriteAsJsonAsync(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
-            return;
-        }
-
-        http.Response.StatusCode = 400;
+        await http.Response.WriteAsJsonAsync(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+        return;
     }
+
+    http.Response.StatusCode = 400;
 }).Produces(200).WithTags("Authentication").Produces(401);
 
 app.MapGet("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http) =>
