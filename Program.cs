@@ -1,18 +1,24 @@
-using HotChocolate.Subscriptions;
+
+using FluentValidation;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using System.ComponentModel.DataAnnotations;
+
+using MinimalApi.Data;
+using MinimalApi.Models;
+using MinimalApi.ViewModels;
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using MinimalApi;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
@@ -64,6 +70,9 @@ builder.Services.AddSwaggerGen(setup =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddHealthChecks().AddDbContextCheck<TodoDbContext>();
+
+builder.Services.AddScoped<IValidator<TodoItemInput>, TodoItemInputValidator>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -99,9 +108,9 @@ app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, 
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, loggedInUser.Username),
-                new Claim(JwtRegisteredClaimNames.Name, loggedInUser.Username),
-                new Claim(JwtRegisteredClaimNames.Email, loggedInUser.Email)
+                new Claim(JwtRegisteredClaimNames.Sub, loggedInUser.Username!),
+                new Claim(JwtRegisteredClaimNames.Name, loggedInUser.Username!),
+                new Claim(JwtRegisteredClaimNames.Email, loggedInUser.Email!)
             };
 
             var token = new JwtSecurityToken
@@ -129,7 +138,7 @@ app.MapGet("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.Au
     using (var dbContext = dbContextFactory.CreateDbContext())
     {
         var user = http.User;
-        return Results.Ok(await dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value)
+        return Results.Ok(await dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value)
             .Select(t => new TodoItemOutput(t.Title, t.IsCompleted, t.CreatedOn)).ToListAsync());
     }
 }).Produces(200, typeof(List<TodoItemOutput>)).ProducesProblem(401);
@@ -139,59 +148,62 @@ app.MapGet("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaul
      using (var dbContext = dbContextFactory.CreateDbContext())
      {
          var user = http.User;
-         return await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value && t.Id == id) is TodoItem todo ? Results.Ok(todo) : Results.NotFound();
+         return await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todo ? Results.Ok(todo) : Results.NotFound();
      }
  }).Produces(200, typeof(TodoItem)).ProducesProblem(401);
 
-app.MapPost("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, TodoItemInput todoItemInput) =>
+app.MapPost("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, TodoItemInput todoItemInput, IValidator<TodoItemInput> todoItemInputValidator) =>
  {
-     using (var dbContext = dbContextFactory.CreateDbContext())
+     var validationResult = todoItemInputValidator.Validate(todoItemInput);
+     if (!validationResult.IsValid)
      {
-         var todoItem = new TodoItem
-         {
-             Title = todoItemInput.Title,
-             IsCompleted = todoItemInput.IsCompleted,
-         };
-         var httpUser = http.User;
-         var user = await dbContext.Users.FirstOrDefaultAsync(t => t.Username == httpUser.FindFirst(ClaimTypes.NameIdentifier).Value);
-         todoItem.User = user;
-         todoItem.UserId = user.Id;
-         dbContext.TodoItems.Add(todoItem);
-         await dbContext.SaveChangesAsync();
-         return Results.Created($"/todoitems/{todoItem.Id}", todoItem);
+         return Results.ValidationProblem(validationResult.ToDictionary());
      }
- }).Accepts<TodoItemInput>("application/json").Produces(201, typeof(TodoItemOutput)).ProducesProblem(401);
+
+     using var dbContext = dbContextFactory.CreateDbContext();
+     var todoItem = new TodoItem
+     {
+         Title = todoItemInput.Title,
+         IsCompleted = todoItemInput.IsCompleted,
+     };
+
+     var httpUser = http.User;
+     var user = await dbContext.Users.FirstOrDefaultAsync(t => t.Username == httpUser.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+     todoItem.User = user!;
+     todoItem.UserId = user!.Id;
+     todoItem.CreatedOn = DateTime.UtcNow;
+     dbContext.TodoItems.Add(todoItem);
+     await dbContext.SaveChangesAsync();
+     return Results.Created($"/todoitems/{todoItem.Id}", new TodoItemOutput(todoItem.Title, todoItem.IsCompleted, todoItem.CreatedOn));
+ }).Accepts<TodoItemInput>("application/json").Produces(201, typeof(TodoItemOutput)).ProducesProblem(401).ProducesProblem(400);
 
 app.MapPut("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id, TodoItemInput todoItemInput) =>
  {
-     using (var dbContext = dbContextFactory.CreateDbContext())
+     using var dbContext = dbContextFactory.CreateDbContext();
+     var user = http.User;
+     if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todoItem)
      {
-         var user = http.User;
-         if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value && t.Id == id) is TodoItem todoItem)
-         {
-             todoItem.IsCompleted = todoItemInput.IsCompleted;
-             await dbContext.SaveChangesAsync();
-             return Results.NoContent();
-         }
-
-         return Results.NotFound();
+         todoItem.IsCompleted = todoItemInput.IsCompleted;
+         await dbContext.SaveChangesAsync();
+         return Results.NoContent();
      }
+
+     return Results.NotFound();
  }).Accepts<TodoItemInput>("application/json").Produces(201, typeof(TodoItemOutput)).ProducesProblem(404).ProducesProblem(401);
 
-app.MapDelete("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id) =>
+app.MapDelete("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id) =>
 {
-    using (var dbContext = dbContextFactory.CreateDbContext())
+    using var dbContext = dbContextFactory.CreateDbContext();
+    var user = http.User;
+    if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todoItem)
     {
-        var user = http.User;
-        if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value && t.Id == id) is TodoItem todoItem)
-        {
-            dbContext.TodoItems.Remove(todoItem);
-            await dbContext.SaveChangesAsync();
-            return Results.NoContent();
-        }
-
-        return Results.NotFound();
+        dbContext.TodoItems.Remove(todoItem);
+        await dbContext.SaveChangesAsync();
+        return Results.NoContent();
     }
+
+    return Results.NotFound();
 }).Accepts<TodoItemInput>("application/json").Produces(204).ProducesProblem(404).ProducesProblem(401);
 
 app.MapGet("/health", async (HealthCheckService healthCheckService) =>
@@ -202,21 +214,19 @@ app.MapGet("/health", async (HealthCheckService healthCheckService) =>
 
 app.MapGet("/todoitems/history", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http) =>
  {
-     using (var dbContext = dbContextFactory.CreateDbContext())
-     {
-         var user = http.User;
-         return Results.Ok(await dbContext.TodoItems.TemporalAsOf(DateTime.UtcNow)
-            .Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier).Value)
-            .OrderBy(todoItem => EF.Property<DateTime>(todoItem, "PeriodStart"))
-            .Select(todoItem => new TodoItemAudit
-            {
-                Title = todoItem.Title,
-                IsCompleted = todoItem.IsCompleted,
-                PeriodStart = EF.Property<DateTime>(todoItem, "PeriodStart"),
-                PeriodEnd = EF.Property<DateTime>(todoItem, "PeriodEnd")
-            })
-            .ToListAsync());
-     }
+     using var dbContext = dbContextFactory.CreateDbContext();
+     var user = http.User;
+     return Results.Ok(await dbContext.TodoItems.TemporalAsOf(DateTime.UtcNow)
+        .Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value)
+        .OrderBy(todoItem => EF.Property<DateTime>(todoItem, "PeriodStart"))
+        .Select(todoItem => new TodoItemAudit
+        {
+            Title = todoItem.Title,
+            IsCompleted = todoItem.IsCompleted,
+            PeriodStart = EF.Property<DateTime>(todoItem, "PeriodStart"),
+            PeriodEnd = EF.Property<DateTime>(todoItem, "PeriodEnd")
+        })
+        .ToListAsync());
  }).Produces<TodoItemAudit>(200).WithTags(new[] { "EF Core Feature" }).ProducesProblem(401);
 
 app.UseRouting();
@@ -229,141 +239,4 @@ app.UseEndpoints(endpoints =>
 
 app.Run();
 
-public class TodoDbContext : DbContext
-{
-    public TodoDbContext(DbContextOptions<TodoDbContext> options)
-        : base(options) { }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<TodoItem>().ToTable("TodoItems", t => t.IsTemporal());
-        modelBuilder.Entity<User>().ToTable("Users", u => u.IsTemporal());
-        modelBuilder.Entity<User>().HasData(new User
-        {
-            Id = 1,
-            Username = "admin",
-            Password = "admin",
-            Email = "admin@example.com",
-            CreatedOn = DateTime.UtcNow
-        });
-
-        modelBuilder.Entity<TodoItem>().HasData(new TodoItem
-        {
-            Id = 1,
-            Title = "Todo Item 1",
-            IsCompleted = false,
-            UserId = 1,
-            CreatedOn = DateTime.UtcNow
-        });
-    }
-
-    public DbSet<TodoItem> TodoItems => Set<TodoItem>();
-    public DbSet<User> Users => Set<User>();
-}
-
-[GraphQLDescription("A todo item")]
-public class TodoItem
-{
-    public int Id { get; set; }
-    [Required]
-    [GraphQLDescription("The title of the todo item")]
-    public string? Title { get; set; }
-    [GraphQLDescription("The completed status of the todo item")]
-    public bool IsCompleted { get; set; }
-    public User User { get; set; }
-    public int UserId { get; set; }
-    public DateTime CreatedOn { get; set; }
-}
-
-public class User
-{
-    public int Id { get; set; }
-    [Required]
-    public string Username { get; set; }
-    [Required]
-    public string Password { get; set; }
-    public DateTime CreatedOn { get; set; }
-    public string Email { get; set; }
-    public ICollection<TodoItem> Todos { get; set; }
-}
-
-public record TodoItemInput(string? Title, bool IsCompleted);
-public record TodoItemOutput(string? Title, bool IsCompleted, DateTime? createdOn);
-
-public class TodoItemAudit
-{
-    public string? Title { get; set; }
-    public bool IsCompleted { get; set; }
-    public DateTime PeriodStart { get; set; }
-    public DateTime PeriodEnd { get; set; }
-}
-
-public class Query
-{
-    [UseDbContext(typeof(TodoDbContext))]
-    public IQueryable<TodoItem> GetTodoItems([ScopedService] TodoDbContext context) =>
-            context.TodoItems;
-}
-
-public class Mutation
-{
-    [UseDbContext(typeof(TodoDbContext))]
-    public async Task<TodoItem> CreateTodoItem([ScopedService] TodoDbContext context,
-        TodoItemInput todoItem,
-        [Service] ITopicEventSender topicEventSender,
-        CancellationToken cancellationToken)
-    {
-        var todo = new TodoItem
-        {
-            Title = todoItem.Title,
-            IsCompleted = todoItem.IsCompleted
-        };
-        context.TodoItems.Add(todo);
-        await context.SaveChangesAsync(cancellationToken);
-        await topicEventSender.SendAsync(nameof(Subscription.OnCreateTodoItem), todo, cancellationToken);
-        return todo;
-    }
-}
-
-public class Subscription
-{
-    [Subscribe]
-    [Topic]
-    public TodoItem OnCreateTodoItem([EventMessage] TodoItem todoItem)
-    {
-        return todoItem;
-    }
-}
-
-public class AddAuthorizationHeaderOperationHeader : IOperationFilter
-{
-    public void Apply(OpenApiOperation operation, OperationFilterContext context)
-    {
-        var actionMetadata = context.ApiDescription.ActionDescriptor.EndpointMetadata;
-        var isAuthorized = actionMetadata.Any(metadataItem => metadataItem is AuthorizeAttribute);
-        var allowAnonymous = actionMetadata.Any(metadataItem => metadataItem is AllowAnonymousAttribute);
-
-        if (!isAuthorized || allowAnonymous)
-        {
-            return;
-        }
-        if (operation.Parameters == null)
-            operation.Parameters = new List<OpenApiParameter>();
-
-        operation.Security = new List<OpenApiSecurityRequirement>();
-
-        //Add JWT bearer type
-        operation.Security.Add(new OpenApiSecurityRequirement() {
-                {
-                    new OpenApiSecurityScheme {
-                        Reference = new OpenApiReference {
-                            Id = "Bearer",
-                            Type = ReferenceType.SecurityScheme
-                        }
-                    },
-                    new List<string>()
-                }
-            }
-        );
-    }
-}
