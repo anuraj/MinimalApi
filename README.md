@@ -6,6 +6,10 @@ Todo API implementation using Minimal API, Entity Framework Core SQL Server Prov
 
 ## Features
 
+### July 21, 2022
+* Validation support using FluentValidation
+* Refactoring and fixed all the warnings.
+
 ### December 1, 2021
 * Implemented DTO for Input and Output.
 * Bug Fix - the /history endpoint was not returning any data.
