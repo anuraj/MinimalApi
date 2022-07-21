@@ -2,13 +2,14 @@
 
 Todo API implementation using Minimal API, Entity Framework Core SQL Server Provider and Open API.
 
-[![CI](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
+[![Build and deploy ASP.Net Core app to Azure Web App - minimalapi-demo](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml)
 
 ## Features
 
 ### July 21, 2022
 * Validation support using FluentValidation
 * Refactoring and fixed all the warnings.
+* [Online Demo](https://minimalapi-demo.azurewebsites.net/swagger/index.html)
 
 ### December 1, 2021
 * Implemented DTO for Input and Output.
