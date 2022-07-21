@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<PackageReference Include="FluentValidation.AspNetCore" Version="11.1.2" />
 		<PackageReference Include="HotChocolate.AspNetCore" Version="12.2.1" />
+		<PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="12.2.1" />
 		<PackageReference Include="HotChocolate.Data.EntityFramework" Version="12.2.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.7" />
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.7" />

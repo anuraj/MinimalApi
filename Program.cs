@@ -15,26 +15,32 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using MinimalApi;
+using MinimalApi.GraphQL;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddAuthorization();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters()
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateActor = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Issuer"],
-        ValidAudience = builder.Configuration["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"]))
-    };
-});
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            ValidateActor = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Issuer"],
+            ValidAudience = builder.Configuration["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"]))
+        };
+    });
+
 builder.Services.AddDbContextFactory<TodoDbContext>(options => options.UseInMemoryDatabase($"MinimalApiDb-{Guid.NewGuid()}"));
 
 builder.Services.AddGraphQLServer()
+    .AddAuthorization()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
     .AddSubscriptionType<Subscription>()
@@ -148,11 +154,9 @@ app.MapGet("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.Au
 
 app.MapGet("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id) =>
  {
-     using (var dbContext = dbContextFactory.CreateDbContext())
-     {
-         var user = http.User;
-         return await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todo ? Results.Ok(todo) : Results.NotFound();
-     }
+     using var dbContext = dbContextFactory.CreateDbContext();
+     var user = http.User;
+     return await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todo ? Results.Ok(todo) : Results.NotFound();
  }).Produces(200, typeof(TodoItem)).ProducesProblem(401);
 
 app.MapPost("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -232,9 +236,12 @@ app.MapGet("/todoitems/history", [Authorize(AuthenticationSchemes = JwtBearerDef
         .ToListAsync());
  }).Produces<TodoItemAudit>(200).WithTags(new[] { "EF Core Feature" }).ProducesProblem(401);
 
-app.UseRouting();
-app.UseAuthorization();
 app.UseAuthentication();
+
+app.UseRouting();
+
+app.UseAuthorization();
+
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapGraphQL();

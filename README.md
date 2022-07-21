@@ -9,7 +9,10 @@ Todo API implementation using Minimal API, Entity Framework Core SQL Server Prov
 ### July 21, 2022
 * Validation support using FluentValidation
 * Refactoring and fixed all the warnings.
-* [Online Demo](https://minimalapi-demo.azurewebsites.net/swagger/index.html)
+* Deploying to Azure App Services - Online Demos.
+	- [REST API - Online Demo](https://minimalapi-demo.azurewebsites.net/swagger/index.html)
+	- [GraphQL - Online Demo](https://minimalapi-demo.azurewebsites.net/graphql)
+* Graph QL Authentication
 
 ### December 1, 2021
 * Implemented DTO for Input and Output.
