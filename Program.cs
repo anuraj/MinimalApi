@@ -16,9 +16,10 @@ using System.Security.Claims;
 using System.Text;
 using MinimalApi;
 using MinimalApi.GraphQL;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.WebHost.UseKestrel(options => options.AddServerHeader = false);
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthorization();
@@ -142,15 +143,31 @@ app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, 
     http.Response.StatusCode = 400;
 }).Produces(200).WithTags("Authentication").Produces(401);
 
-app.MapGet("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http) =>
+app.MapGet("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, [FromQuery(Name = "page")] int? page, [FromQuery(Name = "pageSize")] int? pageSize) =>
 {
-    using (var dbContext = dbContextFactory.CreateDbContext())
+    using var dbContext = dbContextFactory.CreateDbContext();
+    var user = http.User;
+    pageSize ??= 10;
+    page ??= 1;
+
+    var skipAmount = pageSize * (page - 1);
+    var queryable = dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value).AsQueryable();
+    var results = await queryable
+        .Skip(skipAmount ?? 1)
+        .Take(pageSize ?? 10).Select(t => new TodoItemOutput(t.Title, t.IsCompleted, t.CreatedOn)).ToListAsync();
+    var totalNumberOfRecords = await queryable.CountAsync();
+    var mod = totalNumberOfRecords % pageSize;
+    var totalPageCount = (totalNumberOfRecords / pageSize) + (mod == 0 ? 0 : 1);
+
+    return Results.Ok(new PagedResults<TodoItemOutput>()
     {
-        var user = http.User;
-        return Results.Ok(await dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value)
-            .Select(t => new TodoItemOutput(t.Title, t.IsCompleted, t.CreatedOn)).ToListAsync());
-    }
-}).Produces(200, typeof(List<TodoItemOutput>)).ProducesProblem(401);
+        PageNumber = page.Value,
+        PageSize = pageSize!.Value,
+        Results = results,
+        TotalNumberOfPages = totalPageCount!.Value,
+        TotalNumberOfRecords = totalNumberOfRecords
+    });
+}).Produces(200, typeof(PagedResults<TodoItemOutput>)).ProducesProblem(401);
 
 app.MapGet("/todoitems/{id}", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id) =>
  {
