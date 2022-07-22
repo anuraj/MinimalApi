@@ -5,6 +5,8 @@ Todo API implementation using Minimal API, Entity Framework Core SQL Server Prov
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml)
 
 ## Features
+### July 22, 2022
+* Implemented Paging.
 
 ### July 21, 2022
 * Validation support using FluentValidation
