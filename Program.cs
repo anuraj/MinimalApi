@@ -78,6 +78,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddHealthChecks().AddDbContextCheck<TodoDbContext>();
 
 builder.Services.AddScoped<IValidator<TodoItemInput>, TodoItemInputValidator>();
+builder.Services.AddScoped<IValidator<UserInput>, UserInputValidator>();
 
 var app = builder.Build();
 
@@ -102,46 +103,44 @@ if (databaseContext != null)
     databaseContext.Database.EnsureCreated();
 }
 
-app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, User inputUser) =>
+app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, UserInput userInput, IValidator<UserInput> userInputValidator) =>
 {
     using var dbContext = dbContextFactory.CreateDbContext();
-    if (!string.IsNullOrEmpty(inputUser.Username) &&
-        !string.IsNullOrEmpty(inputUser.Password))
+    var validationResult = userInputValidator.Validate(userInput);
+    if (!validationResult.IsValid)
     {
-        var loggedInUser = await dbContext.Users
-            .FirstOrDefaultAsync(user => user.Username == inputUser.Username
-            && user.Password == inputUser.Password);
-        if (loggedInUser == null)
-        {
-            http.Response.StatusCode = 401;
-            return;
-        }
-
-        var claims = new[]
-        {
-                new Claim(JwtRegisteredClaimNames.Sub, loggedInUser.Username!),
-                new Claim(JwtRegisteredClaimNames.Name, loggedInUser.Username!),
-                new Claim(JwtRegisteredClaimNames.Email, loggedInUser.Email!)
-            };
-
-        var token = new JwtSecurityToken
-        (
-            issuer: builder.Configuration["Issuer"],
-            audience: builder.Configuration["Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddDays(60),
-            notBefore: DateTime.UtcNow,
-            signingCredentials: new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"])),
-                SecurityAlgorithms.HmacSha256)
-        );
-
-        await http.Response.WriteAsJsonAsync(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
-        return;
+        return Results.BadRequest();
     }
 
-    http.Response.StatusCode = 400;
-}).Produces(200).WithTags("Authentication").Produces(401);
+    var loggedInUser = await dbContext.Users
+        .FirstOrDefaultAsync(user => user.Username == userInput.Username
+        && user.Password == userInput.Password);
+    if (loggedInUser == null)
+    {
+        return Results.Unauthorized();
+    }
+
+    var claims = new[]
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, loggedInUser.Username!),
+        new Claim(JwtRegisteredClaimNames.Name, loggedInUser.Username!),
+        new Claim(JwtRegisteredClaimNames.Email, loggedInUser.Email!)
+    };
+
+    var token = new JwtSecurityToken
+    (
+        issuer: builder.Configuration["Issuer"],
+        audience: builder.Configuration["Audience"],
+        claims: claims,
+        expires: DateTime.UtcNow.AddDays(60),
+        notBefore: DateTime.UtcNow,
+        signingCredentials: new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"])),
+            SecurityAlgorithms.HmacSha256)
+    );
+
+    return Results.Json(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+}).WithTags("Authentication").Accepts<UserInput>("application/json").Produces(200).Produces(401).ProducesProblem(StatusCodes.Status400BadRequest);
 
 app.MapGet("/todoitems", [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)] async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, [FromQuery(Name = "page")] int? page, [FromQuery(Name = "pageSize")] int? pageSize) =>
 {
