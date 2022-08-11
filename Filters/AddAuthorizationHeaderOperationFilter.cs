@@ -3,9 +3,11 @@ using Microsoft.OpenApi.Models;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace MinimalApi;
+using System;
 
-public class AddAuthorizationHeaderOperationHeader : IOperationFilter
+namespace MinimalApi.Filters;
+
+public class AddAuthorizationHeaderOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
@@ -17,13 +19,13 @@ public class AddAuthorizationHeaderOperationHeader : IOperationFilter
         {
             return;
         }
-        if (operation.Parameters == null)
-            operation.Parameters = new List<OpenApiParameter>();
 
-        operation.Security = new List<OpenApiSecurityRequirement>();
+        operation.Parameters ??= new List<OpenApiParameter>();
 
-        //Add JWT bearer type
-        operation.Security.Add(new OpenApiSecurityRequirement() {
+        operation.Security = new List<OpenApiSecurityRequirement>
+        {
+            //Add JWT bearer type
+            new OpenApiSecurityRequirement() {
                 {
                     new OpenApiSecurityScheme {
                         Reference = new OpenApiReference {
@@ -34,6 +36,6 @@ public class AddAuthorizationHeaderOperationHeader : IOperationFilter
                     new List<string>()
                 }
             }
-        );
+        };
     }
 }

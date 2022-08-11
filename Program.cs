@@ -16,10 +16,20 @@ using System.Security.Claims;
 using System.Text;
 using MinimalApi;
 using MinimalApi.GraphQL;
-using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
+using MinimalApi.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseKestrel(options => options.AddServerHeader = false);
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ApiVersionReader = new HeaderApiVersionReader("api-version");
+});
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthorization();
@@ -71,7 +81,8 @@ builder.Services.AddSwaggerGen(setup =>
         Scheme = "Bearer"
     });
 
-    setup.OperationFilter<AddAuthorizationHeaderOperationHeader>();
+    setup.OperationFilter<AddAuthorizationHeaderOperationFilter>();
+    setup.OperationFilter<AddVersionHeaderOperationFilter>();
 });
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

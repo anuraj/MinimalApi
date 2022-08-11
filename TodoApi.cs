@@ -1,9 +1,14 @@
 using System.Security.Claims;
+
+using Asp.Versioning.Conventions;
+
 using FluentValidation;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using MinimalApi.Data;
 using MinimalApi.Models;
 using MinimalApi.ViewModels;
@@ -14,14 +19,22 @@ public static class TodoApi
 {
     public static IEndpointRouteBuilder MapApiEndpoints(this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/todoitems", GetAllTodos)
-        .Produces(200, typeof(PagedResults<TodoItemOutput>)).ProducesProblem(401);
-        routes.MapGet("/todoitems/{id}", GetTodo).Produces(200, typeof(TodoItemOutput)).ProducesProblem(401);
-        routes.MapPost("/todoitems", CreateTodo).Accepts<TodoItemInput>("application/json").Produces(201).ProducesProblem(401).ProducesProblem(400);
+        var versionSet = routes.NewApiVersionSet()
+                            .HasApiVersion(1.0)
+                            .HasApiVersion(2.0)
+                            .ReportApiVersions()
+                            .Build();
 
-        routes.MapPut("/todoitems/{id}", UpdateTodo).Accepts<TodoItemInput>("application/json").Produces(201).ProducesProblem(404).ProducesProblem(401);
-
-        routes.MapDelete("/todoitems/{id}", DeleteTodo).Accepts<TodoItemInput>("application/json").Produces(204).ProducesProblem(404).ProducesProblem(401);
+        routes.MapGet("/todoitems", GetAllTodos).Produces(200, typeof(PagedResults<TodoItemOutput>))
+            .ProducesProblem(401).WithApiVersionSet(versionSet).MapToApiVersion(1.0);
+        routes.MapGet("/todoitems/{id}", GetTodo).Produces(200, typeof(TodoItemOutput))
+            .ProducesProblem(401).WithApiVersionSet(versionSet);
+        routes.MapPost("/todoitems", CreateTodo).Accepts<TodoItemInput>("application/json")
+            .Produces(201).ProducesProblem(401).ProducesProblem(400).WithApiVersionSet(versionSet);
+        routes.MapPut("/todoitems/{id}", UpdateTodo).Accepts<TodoItemInput>("application/json")
+            .Produces(201).ProducesProblem(404).ProducesProblem(401).WithApiVersionSet(versionSet);
+        routes.MapDelete("/todoitems/{id}", DeleteTodo)
+            .Produces(204).ProducesProblem(404).ProducesProblem(401).WithApiVersionSet(versionSet).MapToApiVersion(2.0);
 
         return routes;
     }
