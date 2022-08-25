@@ -8,7 +8,7 @@ ASP.NET Core 6.0 - Minimal API Example - Todo API implementation using ASP.NET C
 
 ### August 25, 2022
 * Using the C# 10 feature - `Global Using Directive`
-* Implemented Custom Binding for File Upload - Since the [FromForm] attribute is not available.
+* Implemented Custom Binding for File Upload - Since the `[FromForm]` attribute is not available.
 
 ### August 11, 2022
 * Implemented Web API versioning - with Open API support.
