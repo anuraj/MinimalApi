@@ -1,14 +1,6 @@
 ﻿using HotChocolate.AspNetCore.Authorization;
 using HotChocolate.Subscriptions;
 
-using Microsoft.EntityFrameworkCore;
-
-using MinimalApi.Data;
-using MinimalApi.Models;
-using MinimalApi.ViewModels;
-
-using System.Security.Claims;
-
 namespace MinimalApi.GraphQL;
 public class Mutation
 {

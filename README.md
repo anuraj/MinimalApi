@@ -5,6 +5,11 @@ ASP.NET Core 6.0 - Minimal API Example - Todo API implementation using ASP.NET C
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml)
 
 ## Features
+
+### August 25, 2022
+* Using the C# 10 feature - `Global Using Directive`
+* Implemented Custom Binding for File Upload - Since `[FromForm]` attribute not available.
+
 ### August 11, 2022
 * Implemented Web API versioning - with Open API support.
 

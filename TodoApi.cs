@@ -1,17 +1,9 @@
-using System.Security.Claims;
-
 using Asp.Versioning.Conventions;
 
-using FluentValidation;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-using MinimalApi.Data;
 using MinimalApi.Models;
-using MinimalApi.ViewModels;
 
 namespace MinimalApi;
 
@@ -26,7 +18,7 @@ public static class TodoApi
                             .Build();
 
         routes.MapGet("/todoitems", GetAllTodos).Produces(200, typeof(PagedResults<TodoItemOutput>))
-            .ProducesProblem(401).WithApiVersionSet(versionSet).MapToApiVersion(1.0);
+            .ProducesProblem(401).WithApiVersionSet(versionSet).MapToApiVersion(1.0).MapToApiVersion(2.0);
         routes.MapGet("/todoitems/{id}", GetTodo).Produces(200, typeof(TodoItemOutput))
             .ProducesProblem(401).WithApiVersionSet(versionSet);
         routes.MapPost("/todoitems", CreateTodo).Accepts<TodoItemInput>("application/json")
@@ -34,16 +26,66 @@ public static class TodoApi
         routes.MapPut("/todoitems/{id}", UpdateTodo).Accepts<TodoItemInput>("application/json")
             .Produces(201).ProducesProblem(404).ProducesProblem(401).WithApiVersionSet(versionSet);
         routes.MapDelete("/todoitems/{id}", DeleteTodo)
-            .Produces(204).ProducesProblem(404).ProducesProblem(401).WithApiVersionSet(versionSet).MapToApiVersion(2.0);
-
+            .Produces(204).ProducesProblem(404).ProducesProblem(401).WithApiVersionSet(versionSet);
+        routes.MapPost("/bulktodoitems", BulkCreateTodo).Accepts<BulkTodoitem>("multipart/form-data")
+                    .Produces(201).ProducesProblem(401).ProducesProblem(400).WithApiVersionSet(versionSet)
+                    .MapToApiVersion(2.0);
         return routes;
     }
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public static async Task<IResult> DeleteTodo(IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id)
+    public static async Task<IResult> BulkCreateTodo(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, BulkTodoitem bulkTodoitem)
+    {
+        try
+        {
+            var file = bulkTodoitem.File;
+            if (file == null)
+            {
+                return Results.BadRequest("No file was provided");
+            }
+            
+            using var dbContext = dbContextFactory.CreateDbContext();
+            var currentUser = await dbContext.Users.FirstOrDefaultAsync(t => t.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            using var streamReader = new StreamReader(file.OpenReadStream());
+            var todoItemsCSV = await streamReader.ReadToEndAsync();
+            var todoItems = todoItemsCSV.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+            var todoItemsToCreate = new List<TodoItem>();
+            
+            foreach (var todoItem in todoItems)
+            {
+                var todoItemParts = todoItem.Split(',');
+                var isCompleted = false;
+                if (todoItemParts.Length == 2)
+                {
+                    isCompleted = bool.Parse(todoItemParts[1]);
+                }               
+                
+                var todoItemToInsert = new TodoItem
+                {
+                    Title = todoItemParts[0],
+                    IsCompleted = isCompleted,
+                    User = currentUser!,
+                    UserId = currentUser!.Id,
+                    CreatedOn = DateTime.UtcNow
+                };
+                todoItemsToCreate.Add(todoItemToInsert);
+            }
+            
+            await dbContext.TodoItems.AddRangeAsync(todoItemsToCreate);
+            await dbContext.SaveChangesAsync();
+            return Results.Ok();
+        }
+        catch (Exception ex)
+        {
+            return Results.BadRequest($"Exception occured - {ex.Message}.");
+        }
+    }
+
+
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public static async Task<IResult> DeleteTodo(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id)
     {
         using var dbContext = dbContextFactory.CreateDbContext();
-        var user = http.User;
         if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todoItem)
         {
             dbContext.TodoItems.Remove(todoItem);
@@ -55,10 +97,9 @@ public static class TodoApi
     }
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public static async Task<IResult> UpdateTodo(IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id, TodoItemInput todoItemInput)
+    public static async Task<IResult> UpdateTodo(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id, TodoItemInput todoItemInput)
     {
         using var dbContext = dbContextFactory.CreateDbContext();
-        var user = http.User;
         if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todoItem)
         {
             todoItem.IsCompleted = todoItemInput.IsCompleted;
@@ -70,7 +111,7 @@ public static class TodoApi
     }
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public static async Task<IResult> CreateTodo(IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, TodoItemInput todoItemInput, IValidator<TodoItemInput> todoItemInputValidator)
+    public static async Task<IResult> CreateTodo(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, TodoItemInput todoItemInput, IValidator<TodoItemInput> todoItemInputValidator)
     {
         var validationResult = todoItemInputValidator.Validate(todoItemInput);
         if (!validationResult.IsValid)
@@ -85,10 +126,9 @@ public static class TodoApi
             IsCompleted = todoItemInput.IsCompleted,
         };
 
-        var httpUser = http.User;
-        var user = await dbContext.Users.FirstOrDefaultAsync(t => t.Username == httpUser.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-        todoItem.User = user!;
-        todoItem.UserId = user!.Id;
+        var currentUser = await dbContext.Users.FirstOrDefaultAsync(t => t.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        todoItem.User = currentUser!;
+        todoItem.UserId = currentUser!.Id;
         todoItem.CreatedOn = DateTime.UtcNow;
         dbContext.TodoItems.Add(todoItem);
         await dbContext.SaveChangesAsync();
@@ -96,18 +136,16 @@ public static class TodoApi
     }
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public static async Task<IResult> GetTodo(IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, int id)
+    public static async Task<IResult> GetTodo(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id)
     {
         using var dbContext = dbContextFactory.CreateDbContext();
-        var user = http.User;
         return await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todo ? Results.Ok(new TodoItemOutput(todo.Title, todo.IsCompleted, todo.CreatedOn)) : Results.NotFound();
     }
 
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public static async Task<IResult> GetAllTodos(IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, [FromQuery(Name = "page")] int? page, [FromQuery(Name = "pageSize")] int? pageSize)
+    public static async Task<IResult> GetAllTodos(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, [FromQuery(Name = "page")] int? page, [FromQuery(Name = "pageSize")] int? pageSize)
     {
         using var dbContext = dbContextFactory.CreateDbContext();
-        var user = http.User;
         pageSize ??= 10;
         page ??= 1;
 

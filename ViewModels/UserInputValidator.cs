@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-
-namespace MinimalApi.ViewModels
+﻿namespace MinimalApi.ViewModels
 {
     public class UserInputValidator : AbstractValidator<UserInput>
     {

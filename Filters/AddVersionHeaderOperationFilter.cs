@@ -1,7 +1,4 @@
-﻿using Asp.Versioning;
-
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi.Any;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -13,7 +10,7 @@ public class AddVersionHeaderOperationFilter : IOperationFilter
     {
         var actionMetadata = context.ApiDescription.ActionDescriptor.EndpointMetadata;
         operation.Parameters ??= new List<OpenApiParameter>();
-        
+
         var apiVersionMetadata = actionMetadata.Any(metadataItem => metadataItem is ApiVersionMetadata);
         if (apiVersionMetadata)
         {

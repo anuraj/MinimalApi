@@ -1,6 +1,4 @@
-﻿using MinimalApi.Models;
-
-namespace MinimalApi.GraphQL;
+﻿namespace MinimalApi.GraphQL;
 public class Subscription
 {
     [Subscribe]
