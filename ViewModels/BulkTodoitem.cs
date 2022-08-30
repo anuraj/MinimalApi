@@ -5,7 +5,7 @@ namespace MinimalApi.ViewModels;
 public class BulkTodoitem
 {
     public IFormFile? File { get; set; }
-    public static ValueTask<BulkTodoitem?> BindAsync(HttpContext context,
+    public static async ValueTask<BulkTodoitem?> BindAsync(HttpContext context,
                                                    ParameterInfo parameter)
     {
         var form = await context.Request.ReadFormAsync();
