@@ -8,10 +8,11 @@ public class BulkTodoitem
     public static ValueTask<BulkTodoitem?> BindAsync(HttpContext context,
                                                    ParameterInfo parameter)
     {
-        var file = context.Request.Form.Files["File"];
-        return ValueTask.FromResult<BulkTodoitem?>(new BulkTodoitem
+        var form = await context.Request.ReadFormAsync();
+        var file = form.Files["file"];
+        return new Photo
         {
             File = file
-        });
+        };
     }
 }
