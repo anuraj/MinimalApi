@@ -10,7 +10,7 @@ public class BulkTodoitem
     {
         var form = await context.Request.ReadFormAsync();
         var file = form.Files["file"];
-        return new Photo
+        return new BulkTodoitem
         {
             File = file
         };
