@@ -22,32 +22,17 @@ public class TodoDbContext : DbContext
             CreatedOn = DateTime.UtcNow
         });
 
-        modelBuilder.Entity<TodoItem>().HasData(new TodoItem
+        for (var i = 1; i <= 20; i++)
         {
-            Id = 1,
-            Title = "Todo Item 1",
-            IsCompleted = false,
-            UserId = 1,
-            CreatedOn = DateTime.UtcNow
-        });
-
-        modelBuilder.Entity<TodoItem>().HasData(new TodoItem
-        {
-            Id = 2,
-            Title = "Todo Item 2",
-            IsCompleted = false,
-            UserId = 2,
-            CreatedOn = DateTime.UtcNow
-        });
-
-        modelBuilder.Entity<TodoItem>().HasData(new TodoItem
-        {
-            Id = 3,
-            Title = "Todo Item 3",
-            IsCompleted = false,
-            UserId = 2,
-            CreatedOn = DateTime.UtcNow
-        });
+            modelBuilder.Entity<TodoItem>().HasData(new TodoItem
+            {
+                Id = i,
+                Title = $"Todo Item {i}",
+                IsCompleted = false,
+                CreatedOn = DateTime.UtcNow,
+                UserId = 1
+            });
+        }
     }
 
     public DbSet<TodoItem> TodoItems => Set<TodoItem>();

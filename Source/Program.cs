@@ -185,4 +185,5 @@ app.UseAuthorization();
 app.Map("/graphql", () => app.MapGraphQL());
 app.Run();
 
-
+//For integration testing
+public partial class Program { }
