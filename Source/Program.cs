@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -101,7 +102,16 @@ if (databaseContext != null)
 
 app.MapGroup("/todoitems").MapApiEndpoints().WithTags("Todo Items")
     .RequireAuthorization().WithMetadata()
-    .WithApiVersionSet(versionSet);
+    .WithApiVersionSet(versionSet).AddEndpointFilter(async (efiContext, next) =>
+    {
+        var stopwatch = Stopwatch.StartNew();
+        var result = await next(efiContext);
+        stopwatch.Stop();
+        var elapsed = stopwatch.ElapsedMilliseconds;
+        var response = efiContext.HttpContext.Response;
+        response.Headers.Add("X-Response-Time", $"{elapsed.ToString()} milliseconds");
+        return result;
+    });
 
 app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, UserInput userInput, IValidator<UserInput> userInputValidator) =>
 {
