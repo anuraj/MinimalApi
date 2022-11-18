@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MinimalApi;
 
-public class AddAuthorizationHeaderOperationHeader : IOperationFilter
+public class AuthorizationHeaderOperationHeader : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {

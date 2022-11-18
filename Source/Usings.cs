@@ -16,3 +16,4 @@ global using System.Security.Claims;
 global using System.Text;
 global using MinimalApi;
 global using MinimalApi.GraphQL;
+global using Asp.Versioning;

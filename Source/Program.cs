@@ -4,6 +4,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseKestrel(options => options.AddServerHeader = false);
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ApiVersionReader = new HeaderApiVersionReader("api-version");
+});
+
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -34,7 +42,7 @@ builder.Services.AddSwaggerGen(setup =>
 {
     setup.SwaggerDoc("v1", new OpenApiInfo()
     {
-        Description = "Todo web api implementation using Minimal Api in Asp.Net Core",
+        Description = "ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, GraphQL, Entity Framework Core, Token authentication, Versioning, Unit Testing and Open API.",
         Title = "Todo Api",
         Version = "v1",
         Contact = new OpenApiContact()
@@ -53,7 +61,8 @@ builder.Services.AddSwaggerGen(setup =>
         Scheme = "Bearer"
     });
 
-    setup.OperationFilter<AddAuthorizationHeaderOperationHeader>();
+    setup.OperationFilter<AuthorizationHeaderOperationHeader>();
+    setup.OperationFilter<ApiVersionOperationFilter>();
 });
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -69,6 +78,11 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
+var versionSet = app.NewApiVersionSet()
+                    .HasApiVersion(new ApiVersion(1, 0))
+                    .HasApiVersion(new ApiVersion(2, 0))
+                    .ReportApiVersions()
+                    .Build();
 app.UseSwagger();
 
 app.UseSwaggerUI(c =>
@@ -85,7 +99,9 @@ if (databaseContext != null)
     databaseContext.Database.EnsureCreated();
 }
 
-app.MapGroup("").MapApiEndpoints().RequireAuthorization().WithMetadata();
+app.MapGroup("/todoitems").MapApiEndpoints().WithTags("Todo Items")
+    .RequireAuthorization().WithMetadata()
+    .WithApiVersionSet(versionSet);
 
 app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, UserInput userInput, IValidator<UserInput> userInputValidator) =>
 {
@@ -124,7 +140,8 @@ app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, 
     );
 
     return Results.Json(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
-}).WithTags("Authentication").Accepts<UserInput>("application/json").Produces(200).Produces(401).ProducesProblem(StatusCodes.Status400BadRequest);
+}).WithTags("Authentication").Accepts<UserInput>("application/json").Produces(200)
+.Produces(401).ProducesProblem(StatusCodes.Status400BadRequest).WithApiVersionSet(versionSet);
 
 app.MapGet("/health", async (HealthCheckService healthCheckService) =>
 {
@@ -147,7 +164,7 @@ app.MapGet("/todoitems/history", [Authorize(AuthenticationSchemes = JwtBearerDef
             PeriodEnd = EF.Property<DateTime>(todoItem, "PeriodEnd")
         })
         .ToListAsync());
- }).Produces<TodoItemAudit>(200).WithTags(new[] { "EF Core Feature" }).ProducesProblem(401);
+ }).Produces<TodoItemAudit>(200).WithTags(new[] { "EF Core Feature" }).ProducesProblem(401).WithApiVersionSet(versionSet);
 
 app.UseAuthentication();
 
