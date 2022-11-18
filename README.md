@@ -1,6 +1,6 @@
 # ASP.NET Core 7.0 - Minimal API Example.
 
-ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, GraphQL, Entity Framework Core, Token authentication and Open API.
+ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, GraphQL, Entity Framework Core, Token authentication, Versioning, Unit Testing and Open API.
 
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
 
