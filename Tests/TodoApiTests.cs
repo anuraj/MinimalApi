@@ -37,7 +37,7 @@ public class TodoApiTests
         var testDbContextFactory = new TestDbContextFactory();
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
 
-        var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 10);
+        var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 100);
 
         Assert.IsType<NotFound>(todoItemResult);
     }
@@ -59,7 +59,7 @@ public class TodoApiTests
         var actual = createdTodoItemOutput!.Value!.Title;
         Assert.Equal(title, actual);
         var actualLocation = createdTodoItemOutput!.Location;
-        var expectedLocation = $"/todoitems/4";
+        var expectedLocation = $"/todoitems/21";
         Assert.Equal(expectedLocation, actualLocation);
     }
 
@@ -96,7 +96,7 @@ public class TodoApiTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
-        var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 5, todoItemInput);
+        var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 205, todoItemInput);
 
         Assert.IsType<NotFound>(result);
         var updateResult = result as NotFound;
@@ -124,7 +124,7 @@ public class TodoApiTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
-        var result = await TodoApi.DeleteTodoItem(testDbContextFactory, user, 5);
+        var result = await TodoApi.DeleteTodoItem(testDbContextFactory, user, 105);
 
         Assert.IsType<NotFound>(result);
         var deleteResult = result as NotFound;

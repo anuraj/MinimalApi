@@ -40,7 +40,7 @@ jobs:
           dotnet tool install dotnet-coverage
 
       - name: Run the unit tests with code coverage
-        run: dotnet coverage collect dotnet test --output ${{ github.workspace }}/Tests/Coverage --output-format cobertura
+        run: dotnet coverage collect dotnet test --filter TodoApiTests --output ${{ github.workspace }}/Tests/Coverage --output-format cobertura
 
       - name: Generate Report
         run: |
