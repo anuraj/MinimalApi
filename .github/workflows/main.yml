@@ -44,13 +44,14 @@ jobs:
 
       - name: Generate Report
         run: |
-          dotnet reportgenerator -reports:${{ github.workspace }}/Tests/Coverage.cobertura.xml -targetdir:"${{ github.workspace }}/Tests/coveragereport" -reporttypes:Html -assemblyfilters:+MinimalApi
+          dotnet reportgenerator -reports:${{ github.workspace }}/Tests/Coverage.cobertura.xml -targetdir:"${{ github.workspace }}/Tests/coveragereport" -reporttypes:MarkdownSummary -assemblyfilters:+MinimalApi
 
-      - name: Upload code coverage report
-        uses: actions/upload-artifact@v2
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
         with:
-          name: coveragereport
-          path: ${{ github.workspace }}/Tests/coveragereport
+          recreate: true
+          path: ${{ github.workspace }}/Tests/coveragereport/Summary.md
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp

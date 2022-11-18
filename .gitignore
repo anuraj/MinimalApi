@@ -454,3 +454,4 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 CoverageReport
 *.cobertura.xml
+coverage
