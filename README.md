@@ -7,12 +7,13 @@ ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET C
 ## Features
 ## November 18, 2022
 * Moved from .NET 6.0 to .NET 7.0
+* [Endpoint Filters added](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/min-api-filters?view=aspnetcore-7.0&WT.mc_id=DT-MVP-5002040)
 
 ## October 18, 2022
 * NuGet packages upgraded to RC.
 
 ## July 25, 2022
-* Route groups Implemented.
+* [Route groups Implemented](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-7.0&WT.mc_id=DT-MVP-5002040#route-groups)
 * Code coverage implemented.
 
 ## July 24, 2022
