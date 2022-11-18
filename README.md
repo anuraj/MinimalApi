@@ -1,20 +1,20 @@
-# ASP.NET Core 6.0 - Minimal API Example.
+# ASP.NET Core 7.0 - Minimal API Example.
 
-ASP.NET Core 6.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, GraphQL, Entity Framework Core, Token authentication and Open API.
+ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, GraphQL, Entity Framework Core, Token authentication and Open API.
 
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main_minimalapi-demo.yml)
 
 ## Features
+## October 18, 2022
+* NuGet packages upgraded to RC.
 
-### August 25, 2022
-* Using the C# 10 feature - `Global Using Directive`
-* Implemented Custom Binding for File Upload - Since the `[FromForm]` attribute is not available.
+## July 25, 2022
+* Route groups Implemented.
+* Code coverage implemented.
 
-### August 11, 2022
-* Implemented Web API versioning - with Open API support.
-
-### July 24, 2022
-* Upgraded to ASP.NET Core 7.0 - Checkout the branch [dev/aspnet7.0](https://github.com/anuraj/MinimalApi/tree/dev/aspnet7.0)
+## July 24, 2022
+* Upgraded to .NET 7 - Preview.
+* Added Unit Tests (Unit Tests support for Minimal API available in .NET 7)
 
 ### July 22, 2022
 * Implemented Paging.
@@ -22,9 +22,6 @@ ASP.NET Core 6.0 - Minimal API Example - Todo API implementation using ASP.NET C
 ### July 21, 2022
 * Validation support using FluentValidation
 * Refactoring and fixed all the warnings.
-* Deploying to Azure App Services - Online Demos.
-	- [REST API - Online Demo](https://minimalapi-demo.azurewebsites.net/swagger/index.html)
-	- [GraphQL - Online Demo](https://minimalapi-demo.azurewebsites.net/graphql)
 * Graph QL Authentication
 
 ### December 1, 2021

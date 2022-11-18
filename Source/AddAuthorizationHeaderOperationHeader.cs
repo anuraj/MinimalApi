@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.AspNetCore.Authorization;
 
-using Swashbuckle.AspNetCore.SwaggerGen;
+namespace MinimalApi;
 
-namespace MinimalApi.Filters;
-
-public class AddAuthorizationHeaderOperationFilter : IOperationFilter
+public class AddAuthorizationHeaderOperationHeader : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
@@ -16,13 +15,13 @@ public class AddAuthorizationHeaderOperationFilter : IOperationFilter
         {
             return;
         }
+        if (operation.Parameters == null)
+            operation.Parameters = new List<OpenApiParameter>();
 
-        operation.Parameters ??= new List<OpenApiParameter>();
+        operation.Security = new List<OpenApiSecurityRequirement>();
 
-        operation.Security = new List<OpenApiSecurityRequirement>
-        {
-            //Add JWT bearer type
-            new OpenApiSecurityRequirement() {
+        //Add JWT bearer type
+        operation.Security.Add(new OpenApiSecurityRequirement() {
                 {
                     new OpenApiSecurityScheme {
                         Reference = new OpenApiReference {
@@ -33,6 +32,6 @@ public class AddAuthorizationHeaderOperationFilter : IOperationFilter
                     new List<string>()
                 }
             }
-        };
+        );
     }
 }

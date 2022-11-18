@@ -6,41 +6,57 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [main]
+    paths-ignore:
+      - "README.md"
   pull_request:
-    branches: [ main ]
+    branches: [main]
+    paths-ignore:
+      - "README.md"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
+
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: "7.0.x"
           include-prerelease: true
+
       - name: Build with dotnet
         run: dotnet build --configuration Release
-      - name: Install EF Tool
+
+      - name: Install Required Tools
         run: |
-            dotnet new tool-manifest
-            dotnet tool install dotnet-ef
-      - name: Build dotnet bundle
-        run: dotnet ef migrations bundle --verbose
-      - name: Deploy the Database Changes
-        # The bundle command will fail because it is pointing to my local development machine.
-        # If you like to deploy - execute the following code. Since I removed the Azure Database, it is commented.
-        # run: ./efbundle --connection ${{ secrets.CONNECTIONSTRING }}
-        run: echo "Execute the following command to deploy the migrations - ./efbundle --connection <connection string>"
-     
+          dotnet new tool-manifest
+          dotnet tool install dotnet-reportgenerator-globaltool
+          dotnet tool install dotnet-coverage
+
+      - name: Run the unit tests with code coverage
+        run: dotnet coverage collect dotnet test --output ${{ github.workspace }}/Tests/Coverage --output-format cobertura
+
+      - name: Generate Report
+        run: |
+          dotnet reportgenerator -reports:${{ github.workspace }}/Tests/Coverage.cobertura.xml -targetdir:"${{ github.workspace }}/Tests/coveragereport" -reporttypes:Html -assemblyfilters:+MinimalApi
+
+      - name: Upload code coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coveragereport
+          path: ${{ github.workspace }}/Tests/coveragereport
+
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp

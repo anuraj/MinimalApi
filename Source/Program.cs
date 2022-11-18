@@ -2,15 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseKestrel(options => options.AddServerHeader = false);
-
-builder.Services.AddApiVersioning(options =>
-{
-    options.DefaultApiVersion = new ApiVersion(1, 0);
-    options.ReportApiVersions = true;
-    options.AssumeDefaultVersionWhenUnspecified = true;
-    options.ApiVersionReader = new HeaderApiVersionReader("api-version");
-});
-
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthorization();
@@ -25,7 +16,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Issuer"],
             ValidAudience = builder.Configuration["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"]!))
         };
     });
 
@@ -62,8 +53,7 @@ builder.Services.AddSwaggerGen(setup =>
         Scheme = "Bearer"
     });
 
-    setup.OperationFilter<AddAuthorizationHeaderOperationFilter>();
-    setup.OperationFilter<AddVersionHeaderOperationFilter>();
+    setup.OperationFilter<AddAuthorizationHeaderOperationHeader>();
 });
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -95,7 +85,7 @@ if (databaseContext != null)
     databaseContext.Database.EnsureCreated();
 }
 
-app.MapApiEndpoints();
+app.MapGroup("").MapApiEndpoints().RequireAuthorization().WithMetadata();
 
 app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, HttpContext http, UserInput userInput, IValidator<UserInput> userInputValidator) =>
 {
@@ -129,7 +119,7 @@ app.MapPost("/token", async (IDbContextFactory<TodoDbContext> dbContextFactory, 
         expires: DateTime.UtcNow.AddDays(60),
         notBefore: DateTime.UtcNow,
         signingCredentials: new SigningCredentials(
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"])),
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["SigningKey"]!)),
             SecurityAlgorithms.HmacSha256)
     );
 
@@ -165,11 +155,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapGraphQL();
-});
-
+app.Map("/graphql", () => app.MapGraphQL());
 app.Run();
 
 

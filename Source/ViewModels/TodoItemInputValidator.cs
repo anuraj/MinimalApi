@@ -1,4 +1,10 @@
-﻿namespace MinimalApi.ViewModels;
+﻿using FluentValidation;
+
+using Microsoft.EntityFrameworkCore;
+
+using MinimalApi.Data;
+
+namespace MinimalApi.ViewModels;
 
 public class TodoItemInputValidator : AbstractValidator<TodoItemInput>
 {

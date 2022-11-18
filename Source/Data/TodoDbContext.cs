@@ -30,6 +30,24 @@ public class TodoDbContext : DbContext
             UserId = 1,
             CreatedOn = DateTime.UtcNow
         });
+
+        modelBuilder.Entity<TodoItem>().HasData(new TodoItem
+        {
+            Id = 2,
+            Title = "Todo Item 2",
+            IsCompleted = false,
+            UserId = 2,
+            CreatedOn = DateTime.UtcNow
+        });
+
+        modelBuilder.Entity<TodoItem>().HasData(new TodoItem
+        {
+            Id = 3,
+            Title = "Todo Item 3",
+            IsCompleted = false,
+            UserId = 2,
+            CreatedOn = DateTime.UtcNow
+        });
     }
 
     public DbSet<TodoItem> TodoItems => Set<TodoItem>();
