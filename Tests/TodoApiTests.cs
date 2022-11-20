@@ -13,7 +13,7 @@ public class TodoApiTests
     public async Task GetAllTodoItems_ReturnsOkResultOfIEnumerableTodoItems()
     {
         var testDbContextFactory = new TestDbContextFactory();
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemsResult = await TodoApi.GetAllTodoItems(testDbContextFactory, user);
 
@@ -24,7 +24,7 @@ public class TodoApiTests
     public async Task GetTodoItemById_ReturnsOkResultOfTodoItem()
     {
         var testDbContextFactory = new TestDbContextFactory();
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 1);
 
@@ -35,7 +35,7 @@ public class TodoApiTests
     public async Task GetTodoItemById_ReturnsNotFound()
     {
         var testDbContextFactory = new TestDbContextFactory();
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 100);
 
@@ -47,7 +47,7 @@ public class TodoApiTests
     {
         var testDbContextFactory = new TestDbContextFactory();
         var user = new ClaimsPrincipal(new ClaimsIdentity(
-            new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
+            new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "user1"));
         var title = "This todo item from Unit test";
         var todoItemInput = new TodoItemInput() { IsCompleted = false, Title = title };
         var todoItemOutputResult = await TodoApi.CreateTodoItem(
@@ -67,7 +67,7 @@ public class TodoApiTests
     public async Task CreateTodoItem_ReturnsProblem()
     {
         var testDbContextFactory = new TestDbContextFactory();
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput();
         var todoItemOutputResult = await TodoApi.CreateTodoItem(testDbContextFactory, user, todoItemInput, new TodoItemInputValidator(testDbContextFactory));
@@ -79,7 +79,7 @@ public class TodoApiTests
     public async Task UpdateTodoItem_ReturnsNoContent()
     {
         var testDbContextFactory = new TestDbContextFactory();
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
         var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 1, todoItemInput);
@@ -93,7 +93,7 @@ public class TodoApiTests
     public async Task UpdateTodoItem_ReturnsNotFound()
     {
         var testDbContextFactory = new TestDbContextFactory();
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
         var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 205, todoItemInput);
@@ -107,7 +107,7 @@ public class TodoApiTests
     public async Task DeleteTodoItem_ReturnsNoContent()
     {
         var testDbContextFactory = new TestDbContextFactory();
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
         var result = await TodoApi.DeleteTodoItem(testDbContextFactory, user, 1);
@@ -121,7 +121,7 @@ public class TodoApiTests
     public async Task DeleteTodoItem_ReturnsNotFound()
     {
         var testDbContextFactory = new TestDbContextFactory();
-        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "admin") }, "admin"));
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
         var result = await TodoApi.DeleteTodoItem(testDbContextFactory, user, 105);

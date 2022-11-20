@@ -221,10 +221,49 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
         }
     }
 
+    [Theory]
+    [InlineData(true, "1.0")]
+    [InlineData(false, "1.0")]
+    [InlineData(true, "2.0")]
+    [InlineData(false, "2.0")]
+    [InlineData(true, "3.0")]
+    public async Task GetTodoItemsWithVersionHeader(bool getToken = false, string version = "1.0")
+    {
+        if (!getToken)
+        {
+            var token = await GetToken();
+            Assert.NotNull(token);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+        _httpClient.DefaultRequestHeaders.Add("api-version", version);
+        var response = await _httpClient.GetAsync("/todoitems");
+        var responseStatusCode = response.StatusCode;
+        if (!getToken)
+        {
+            Assert.Equal(HttpStatusCode.OK, responseStatusCode);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var todoItems = JsonSerializer.Deserialize<PagedResults<TodoItemOutput>>(responseContent);
+            Assert.NotNull(todoItems);
+        }
+        else
+        {
+            if (version == "3.0")
+            {
+                Assert.Equal(HttpStatusCode.NotFound, responseStatusCode);
+            }
+            else
+            {
+                Assert.Equal(HttpStatusCode.Unauthorized, responseStatusCode);
+            }
+
+        }
+    }
+
     private async Task<string> GetToken()
     {
         var response = await _httpClient.PostAsync("/token", new StringContent(
-                    @"{""username"":""admin"",""password"":""admin""}", Encoding.UTF8, "application/json"));
+                    @"{""username"":""user1"",""password"":""secret-1""}", Encoding.UTF8, "application/json"));
         response.EnsureSuccessStatusCode();
         var responseString = await response.Content.ReadAsStringAsync();
         var jsonDocument = JsonDocument.Parse(responseString);
