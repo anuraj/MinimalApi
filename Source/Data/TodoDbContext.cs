@@ -13,14 +13,17 @@ public class TodoDbContext : DbContext
     {
         modelBuilder.Entity<TodoItem>().ToTable("TodoItems", t => t.IsTemporal());
         modelBuilder.Entity<User>().ToTable("Users", u => u.IsTemporal());
-        modelBuilder.Entity<User>().HasData(new User
+        for (var i = 1; i <= 20; i++)
         {
-            Id = 1,
-            Username = "admin",
-            Password = "admin",
-            Email = "admin@example.com",
-            CreatedOn = DateTime.UtcNow
-        });
+            modelBuilder.Entity<User>().HasData(new User
+            {
+                Id = i,
+                Username = $"user{i}",
+                Password = $"secret-{i}",
+                Email = $"user{i}@example.com",
+                CreatedOn = DateTime.UtcNow
+            });
+        }
 
         for (var i = 1; i <= 20; i++)
         {
