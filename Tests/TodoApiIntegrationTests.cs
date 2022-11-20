@@ -226,7 +226,6 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [InlineData(false, "1.0")]
     [InlineData(true, "2.0")]
     [InlineData(false, "2.0")]
-    [InlineData(true, "3.0")]
     public async Task GetTodoItemsWithVersionHeader(bool getToken = false, string version = "1.0")
     {
         if (!getToken)
@@ -248,15 +247,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
         }
         else
         {
-            if (version == "3.0")
-            {
-                Assert.Equal(HttpStatusCode.NotFound, responseStatusCode);
-            }
-            else
-            {
-                Assert.Equal(HttpStatusCode.Unauthorized, responseStatusCode);
-            }
-
+            Assert.Equal(HttpStatusCode.Unauthorized, responseStatusCode);
         }
     }
 

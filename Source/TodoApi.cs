@@ -11,32 +11,7 @@ public static class TodoApi
         groups.MapPost("/", CreateTodoItem).Accepts<TodoItemInput>("application/json").Produces(201).ProducesProblem(401).ProducesProblem(400);
         groups.MapPut("/{id}", UpdateTodoItem).Accepts<TodoItemInput>("application/json").Produces(201).ProducesProblem(404).ProducesProblem(401);
         groups.MapDelete("/{id}", DeleteTodoItem).Produces(204).ProducesProblem(404).ProducesProblem(401);
-        groups.MapGet("/filter={filter}", GetTodoItemsByFilter).Produces(200, typeof(PagedResults<TodoItemOutput>)).ProducesProblem(401);
         return groups;
-    }
-
-    public static async Task<IResult> GetTodoItemsByFilter(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, string filter, 
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-    {
-        using var dbContext = dbContextFactory.CreateDbContext();
-
-        var skipAmount = pageSize * (page - 1);
-        var queryable = dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value).AsQueryable();
-        var results = await queryable
-            .Skip(skipAmount)
-            .Take(pageSize).Select(t => new TodoItemOutput(t.Title, t.IsCompleted, t.CreatedOn)).ToListAsync();
-        var totalNumberOfRecords = await queryable.CountAsync();
-        var mod = totalNumberOfRecords % pageSize;
-        var totalPageCount = (totalNumberOfRecords / pageSize) + (mod == 0 ? 0 : 1);
-
-        return TypedResults.Ok(new PagedResults<TodoItemOutput>()
-        {
-            PageNumber = page,
-            PageSize = pageSize,
-            Results = results,
-            TotalNumberOfPages = totalPageCount,
-            TotalNumberOfRecords = totalNumberOfRecords
-        });
     }
 
     public static async Task<IResult> DeleteTodoItem(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id)
