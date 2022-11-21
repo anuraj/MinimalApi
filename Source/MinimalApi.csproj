@@ -4,8 +4,10 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-	  <UserSecretsId>c863d8a7-6953-45aa-baa6-3b932debfdd0</UserSecretsId>
-  </PropertyGroup>
+		<UserSecretsId>c863d8a7-6953-45aa-baa6-3b932debfdd0</UserSecretsId>
+		<ContainerImageName>minimalapi</ContainerImageName>
+		<ContainerImageTag>1.0.0</ContainerImageTag>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Asp.Versioning.Http" Version="6.2.2" />
@@ -24,6 +26,7 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="7.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.0" />
+		<PackageReference Include="Microsoft.NET.Build.Containers" Version="0.2.7" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 	</ItemGroup>
 	<ItemGroup>
