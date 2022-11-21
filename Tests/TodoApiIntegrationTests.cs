@@ -251,13 +251,9 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
         }
     }
 
-    private async Task<string> GetToken()
+    private static async Task<string> GetToken()
     {
-        var response = await _httpClient.PostAsync("/token", new StringContent(
-                    @"{""username"":""user1"",""password"":""secret-1""}", Encoding.UTF8, "application/json"));
-        response.EnsureSuccessStatusCode();
-        var responseString = await response.Content.ReadAsStringAsync();
-        var jsonDocument = JsonDocument.Parse(responseString);
-        return jsonDocument.RootElement.GetProperty("token").GetString()!;
+        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InVzZXIxIiwic3ViIjoidXNlcjEiLCJqdGkiOiI1YzhhMjQyMSIsIlVzZXJuYW1lIjoidXNlcjEiLCJFbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6MjEyNDQiLCJodHRwczovL2xvY2FsaG9zdDo0NDM3MyIsImh0dHBzOi8vbG9jYWxob3N0OjUwMDEiLCJodHRwOi8vbG9jYWxob3N0OjUwMDAiXSwibmJmIjoxNjY5MDI1NzE3LCJleHAiOjE4MjY3MDU3MTcsImlhdCI6MTY2OTAyNTcxOCwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.lZNt4nMTlTaJfxNJqTcxvntQL-0gIRFFb51loG38cUE";
+        return await Task.Run(() => token);
     }
 }
