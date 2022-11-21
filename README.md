@@ -5,6 +5,17 @@ ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET C
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
 
 ## Features
+
+## November 21, 2022
+
+* Modified authentication code to support `dotnet user-jwts`. Removed the `token` endpoint
+* How to create token using `dotnet user-jwts`.
+	* If the dotnet tool not exist, you may need to install it first.
+	* Execute the command - `dotnet user-jwts create --claim Username=user1 --claim Email=user1@example.com --name user1`. 
+	* This will generate a token and you can use this token in the Swagger / Open API.
+
+You can find more details here - [Manage JSON Web Tokens in development with dotnet user-jwts](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/jwt-authn?view=aspnetcore-7.0&tabs=windows&WT.mc_id=DT-MVP-5002040)
+
 ## November 18, 2022
 * Moved from .NET 6.0 to .NET 7.0
 * [Endpoint Filters added](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/min-api-filters?view=aspnetcore-7.0&WT.mc_id=DT-MVP-5002040)

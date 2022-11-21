@@ -14,33 +14,38 @@ public static class TodoApi
         return groups;
     }
 
-    public static async Task<IResult> DeleteTodoItem(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id)
+    internal static async Task<IResult> GetAllTodoItems(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, [FromQuery(Name = "page")] int? page = 1, [FromQuery(Name = "pageSize")] int? pageSize = 10)
     {
         using var dbContext = dbContextFactory.CreateDbContext();
-        if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todoItem)
-        {
-            dbContext.TodoItems.Remove(todoItem);
-            await dbContext.SaveChangesAsync();
-            return TypedResults.NoContent();
-        }
+        pageSize ??= 10;
+        page ??= 1;
 
-        return TypedResults.NotFound();
+        var skipAmount = pageSize * (page - 1);
+        var queryable = dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value).AsQueryable();
+        var results = await queryable
+            .Skip(skipAmount ?? 1)
+            .Take(pageSize ?? 10).Select(t => new TodoItemOutput(t.Title, t.IsCompleted, t.CreatedOn)).ToListAsync();
+        var totalNumberOfRecords = await queryable.CountAsync();
+        var mod = totalNumberOfRecords % pageSize;
+        var totalPageCount = (totalNumberOfRecords / pageSize) + (mod == 0 ? 0 : 1);
+
+        return TypedResults.Ok(new PagedResults<TodoItemOutput>()
+        {
+            PageNumber = page.Value,
+            PageSize = pageSize!.Value,
+            Results = results,
+            TotalNumberOfPages = totalPageCount!.Value,
+            TotalNumberOfRecords = totalNumberOfRecords
+        });
     }
 
-    public static async Task<IResult> UpdateTodoItem(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id, TodoItemInput todoItemInput)
+    internal static async Task<IResult> GetTodoItemById(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id)
     {
         using var dbContext = dbContextFactory.CreateDbContext();
-        if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todoItem)
-        {
-            todoItem.IsCompleted = todoItemInput.IsCompleted;
-            await dbContext.SaveChangesAsync();
-            return TypedResults.NoContent();
-        }
-
-        return TypedResults.NotFound();
+        return await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todo ? TypedResults.Ok(new TodoItemOutput(todo.Title, todo.IsCompleted, todo.CreatedOn)) : TypedResults.NotFound();
     }
 
-    public static async Task<IResult> CreateTodoItem(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, TodoItemInput todoItemInput, IValidator<TodoItemInput> todoItemInputValidator)
+    internal static async Task<IResult> CreateTodoItem(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, TodoItemInput todoItemInput, IValidator<TodoItemInput> todoItemInputValidator)
     {
         var validationResult = todoItemInputValidator.Validate(todoItemInput);
         if (!validationResult.IsValid)
@@ -64,34 +69,29 @@ public static class TodoApi
         return TypedResults.Created($"/todoitems/{todoItem.Id}", new TodoItemOutput(todoItem.Title, todoItem.IsCompleted, todoItem.CreatedOn));
     }
 
-    public static async Task<IResult> GetTodoItemById(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id)
+    internal static async Task<IResult> UpdateTodoItem(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id, TodoItemInput todoItemInput)
     {
         using var dbContext = dbContextFactory.CreateDbContext();
-        return await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todo ? TypedResults.Ok(new TodoItemOutput(todo.Title, todo.IsCompleted, todo.CreatedOn)) : TypedResults.NotFound();
+        if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todoItem)
+        {
+            todoItem.IsCompleted = todoItemInput.IsCompleted;
+            await dbContext.SaveChangesAsync();
+            return TypedResults.NoContent();
+        }
+
+        return TypedResults.NotFound();
     }
 
-    public static async Task<IResult> GetAllTodoItems(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, [FromQuery(Name = "page")] int? page = 1, [FromQuery(Name = "pageSize")] int? pageSize = 10)
+    internal static async Task<IResult> DeleteTodoItem(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id)
     {
         using var dbContext = dbContextFactory.CreateDbContext();
-        pageSize ??= 10;
-        page ??= 1;
-
-        var skipAmount = pageSize * (page - 1);
-        var queryable = dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value).AsQueryable();
-        var results = await queryable
-            .Skip(skipAmount ?? 1)
-            .Take(pageSize ?? 10).Select(t => new TodoItemOutput(t.Title, t.IsCompleted, t.CreatedOn)).ToListAsync();
-        var totalNumberOfRecords = await queryable.CountAsync();
-        var mod = totalNumberOfRecords % pageSize;
-        var totalPageCount = (totalNumberOfRecords / pageSize) + (mod == 0 ? 0 : 1);
-
-        return TypedResults.Ok(new PagedResults<TodoItemOutput>()
+        if (await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todoItem)
         {
-            PageNumber = page.Value,
-            PageSize = pageSize!.Value,
-            Results = results,
-            TotalNumberOfPages = totalPageCount!.Value,
-            TotalNumberOfRecords = totalNumberOfRecords
-        });
+            dbContext.TodoItems.Remove(todoItem);
+            await dbContext.SaveChangesAsync();
+            return TypedResults.NoContent();
+        }
+
+        return TypedResults.NotFound();
     }
 }
