@@ -1,13 +1,16 @@
 # ASP.NET Core 7.0 - Minimal API Example.
 
-ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, GraphQL, Entity Framework Core, Token authentication, Versioning, Unit Testing and Open API.
+ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, GraphQL, Entity Framework Core, Token authentication, Versioning, Unit Testing, Integration Testing and Open API.
 
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
 
 ## Features
 
-## November 21, 2022
+## November 22, 2022
+* Publishing Code coverage results as artifact
 
+## November 21, 2022
+* DotNet CLI - Container image publish support added - [Feature announcement](https://devblogs.microsoft.com/dotnet/announcing-builtin-container-support-for-the-dotnet-sdk/?WT.mc_id=DT-MVP-5002040)
 * Modified authentication code to support `dotnet user-jwts`. Removed the `token` endpoint
 * How to create token using `dotnet user-jwts`.
 	* If the dotnet tool not exist, you may need to install it first.
