@@ -1,10 +1,5 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [main]
     paths-ignore:
@@ -13,8 +8,6 @@ on:
     branches: [main]
     paths-ignore:
       - "README.md"
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -33,48 +26,16 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: Install Required Tools
-        run: |
-          dotnet new tool-manifest
-          dotnet tool install dotnet-reportgenerator-globaltool
-          dotnet tool install dotnet-coverage
-
-      - name: Run the unit tests with code coverage
-        run: dotnet coverage collect dotnet test --filter TodoApiTests --output ${{ github.workspace }}/Tests/Coverage --output-format cobertura
-
-      - name: Generate Report
-        run: |
-          dotnet reportgenerator -reports:${{ github.workspace }}/Tests/Coverage.cobertura.xml -targetdir:"${{ github.workspace }}/Tests/coveragereport" -reporttypes:"MarkdownSummary;Html" -assemblyfilters:+MinimalApi
-      - name: Upload code coverage report
-        uses: actions/upload-artifact@v2
-        with:
-          name: coveragereport
-          path: ${{ github.workspace }}/Tests/coveragereport
-      - name: Add Coverage PR Comment
-        uses: marocchino/sticky-pull-request-comment@v2
-        if: github.event_name == 'pull_request'
-        with:
-          recreate: true
-          path: ${{ github.workspace }}/Tests/coveragereport/Summary.md
-
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-
       - name: dotnet publish to Docker
         run: dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v2
-        with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
-      
       - name: Login with Github Container registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish to Github Container registry
         run: docker push ghcr.io/anuraj/minimalapi:1.0.0
 
