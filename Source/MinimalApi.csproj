@@ -10,11 +10,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Asp.Versioning.Http" Version="6.2.2" />
+		<PackageReference Include="Asp.Versioning.Http" Version="6.3.1" />
 		<PackageReference Include="FluentValidation.AspNetCore" Version="11.2.2" />
-		<PackageReference Include="HotChocolate.AspNetCore" Version="12.15.2" />
-		<PackageReference Include="HotChocolate.AspNetCore.Authorization" Version="12.15.2" />
-		<PackageReference Include="HotChocolate.Data.EntityFramework" Version="12.15.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authorization" Version="7.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.0" />

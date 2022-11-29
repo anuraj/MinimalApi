@@ -1,10 +1,14 @@
 # ASP.NET Core 7.0 - Minimal API Example.
 
-ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, GraphQL, Entity Framework Core, Token authentication, Versioning, Unit Testing, Integration Testing and Open API.
+ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, Entity Framework Core, Token authentication, Versioning, Unit Testing, Integration Testing and Open API.
 
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
 
 ## Features
+
+## November 29, 2022
+* Implemented Rate Limiting support for Web API in .NET 7 - [Learn more about the feature](https://learn.microsoft.com/aspnet/core/performance/rate-limit?view=aspnetcore-7.0&WT.mc_id=DT-MVP-5002040)
+* Removed GraphQL support.
 
 ## November 22, 2022
 * Publishing Code coverage results as artifact

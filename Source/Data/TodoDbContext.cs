@@ -1,6 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.EntityFrameworkCore;
 
 using MinimalApi.Models;
+
+using System.Security.Cryptography;
 
 namespace MinimalApi.Data;
 
@@ -15,13 +18,24 @@ public class TodoDbContext : DbContext
         modelBuilder.Entity<User>().ToTable("Users", u => u.IsTemporal());
         for (var i = 1; i <= 20; i++)
         {
+            byte[] salt = RandomNumberGenerator.GetBytes(128 / 8);
+            string hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: $"secret-{i}",
+                salt: salt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 100000,
+                numBytesRequested: 256 / 8));
+
             modelBuilder.Entity<User>().HasData(new User
             {
                 Id = i,
                 Username = $"user{i}",
-                Password = $"secret-{i}",
+                Password = hashed,
                 Email = $"user{i}@example.com",
-                CreatedOn = DateTime.UtcNow
+                CreatedOn = DateTime.UtcNow,
+                Salt = Convert.ToBase64String(salt),
+                PermitLimit = 60,
+                RateLimitWindowInMinutes = 5
             });
         }
 
