@@ -11,4 +11,7 @@ public class User
     public DateTime CreatedOn { get; set; }
     public string? Email { get; set; }
     public ICollection<TodoItem>? Todos { get; set; }
+    public string? Salt { get; set; }
+    public int RateLimitWindowInMinutes { get; set; } = 5;
+    public int PermitLimit { get; set; } = 60;
 }

@@ -9,12 +9,10 @@ namespace MinimalApi.Tests;
 
 public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _httpClient;
 
     public TodoApiIntegrationTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
         _httpClient = factory.CreateClient();
     }
 
@@ -25,7 +23,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     {
         if (!getToken)
         {
-            var token = await GetToken();
+            var token = await GetTokenForUser1();
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -49,7 +47,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     {
         if (!getToken)
         {
-            var token = await GetToken();
+            var token = await GetTokenForUser1();
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -73,7 +71,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     {
         if (!getToken)
         {
-            var token = await GetToken();
+            var token = await GetTokenForUser1();
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -99,7 +97,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     {
         if (!getToken)
         {
-            var token = await GetToken();
+            var token = await GetTokenForUser1();
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -125,7 +123,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     {
         if (!getToken)
         {
-            var token = await GetToken();
+            var token = await GetTokenForUser1();
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -151,7 +149,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     {
         if (!getToken)
         {
-            var token = await GetToken();
+            var token = await GetTokenForUser1();
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -177,7 +175,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     {
         if (!getToken)
         {
-            var token = await GetToken();
+            var token = await GetTokenForUser1();
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -201,7 +199,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     {
         if (!getToken)
         {
-            var token = await GetToken();
+            var token = await GetTokenForUser1();
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -230,7 +228,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     {
         if (!getToken)
         {
-            var token = await GetToken();
+            var token = await GetTokenForUser1();
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
@@ -251,9 +249,55 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
         }
     }
 
-    private static async Task<string> GetToken()
+    [Fact(Skip = "Running this test will exhaust the anonymous request limit - which fails the other tests")]
+    public async Task GetHealthWithoutToken()
     {
-        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InVzZXIxIiwic3ViIjoidXNlcjEiLCJqdGkiOiI1YzhhMjQyMSIsIlVzZXJuYW1lIjoidXNlcjEiLCJFbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6MjEyNDQiLCJodHRwczovL2xvY2FsaG9zdDo0NDM3MyIsImh0dHBzOi8vbG9jYWxob3N0OjUwMDEiLCJodHRwOi8vbG9jYWxob3N0OjUwMDAiXSwibmJmIjoxNjY5MDI1NzE3LCJleHAiOjE4MjY3MDU3MTcsImlhdCI6MTY2OTAyNTcxOCwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.lZNt4nMTlTaJfxNJqTcxvntQL-0gIRFFb51loG38cUE";
+        var response = await _httpClient.GetAsync("/health");
+        var responseStatusCode = response.StatusCode;
+        Assert.Equal(HttpStatusCode.OK, responseStatusCode);
+
+        for (int i = 0; i < 29; i++)
+        {
+            response = await _httpClient.GetAsync("/health");
+            responseStatusCode = response.StatusCode;
+            Assert.Equal(HttpStatusCode.OK, responseStatusCode);
+        }
+
+        response = await _httpClient.GetAsync("/health");
+        responseStatusCode = response.StatusCode;
+        Assert.Equal(HttpStatusCode.TooManyRequests, responseStatusCode);
+    }
+
+    [Fact]
+    public async Task GetHealthWithToken()
+    {
+        var token = await GetTokenForUser2();
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var response = await _httpClient.GetAsync("/health");
+        var responseStatusCode = response.StatusCode;
+        Assert.Equal(HttpStatusCode.OK, responseStatusCode);
+
+        for (int i = 0; i < 59; i++)
+        {
+            response = await _httpClient.GetAsync("/health");
+            responseStatusCode = response.StatusCode;
+            Assert.Equal(HttpStatusCode.OK, responseStatusCode);
+        }
+
+        response = await _httpClient.GetAsync("/health");
+        responseStatusCode = response.StatusCode;
+        Assert.Equal(HttpStatusCode.TooManyRequests, responseStatusCode);
+    }
+
+    private static async Task<string> GetTokenForUser1()
+    {
+        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InVzZXIxIiwic3ViIjoidXNlcjEiLCJqdGkiOiI4YzI0MmQxNiIsIlVzZXJuYW1lIjoidXNlcjEiLCJFbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6MjEyNDQiLCJodHRwczovL2xvY2FsaG9zdDo0NDM3MyIsImh0dHBzOi8vbG9jYWxob3N0OjUwMDEiLCJodHRwOi8vbG9jYWxob3N0OjUwMDAiXSwibmJmIjoxNjY5NjkwMjE1LCJleHAiOjE2Nzc1NTI2MTUsImlhdCI6MTY2OTY5MDIxNiwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.9NQVRgbAHR-FLOs0bUndRSw8jVvUWLZhCRSNxBXWmaU";
+        return await Task.Run(() => token);
+    }
+
+    private static async Task<string> GetTokenForUser2()
+    {
+        var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InVzZXIyIiwic3ViIjoidXNlcjIiLCJqdGkiOiIzZTFlZWRmZCIsIlVzZXJuYW1lIjoidXNlcjIiLCJFbWFpbCI6InVzZXIyQGV4YW1wbGUuY29tIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6MjEyNDQiLCJodHRwczovL2xvY2FsaG9zdDo0NDM3MyIsImh0dHBzOi8vbG9jYWxob3N0OjUwMDEiLCJodHRwOi8vbG9jYWxob3N0OjUwMDAiXSwibmJmIjoxNjY5NzA3MDY4LCJleHAiOjE2Nzc1Njk0NjgsImlhdCI6MTY2OTcwNzA2OSwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.CbsD83t7m8S_kWpNHAVlkH0a8_-rN2BS9pgZ5gqXWJY";
         return await Task.Run(() => token);
     }
 }
