@@ -19,11 +19,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v2.5.0
-
+      - name: Setting up build version
+        run: |
+          $version = "1.0.{0:#}" -f $($Env:GITHUB_RUN_NUMBER)
+          echo "BUILD_VERSION=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v3.0.3
         with:
@@ -40,25 +43,25 @@ jobs:
           dotnet tool install dotnet-coverage
 
       - name: Run the unit tests with code coverage
-        run: dotnet coverage collect dotnet test --filter TodoApiTests --output ${{ github.workspace }}/Tests/Coverage --output-format cobertura
+        run: dotnet coverage collect dotnet test --filter TodoApiTests --output ${{ github.workspace }}\Tests\Coverage --output-format cobertura
 
       - name: Generate Report
         run: |
-          dotnet reportgenerator -reports:${{ github.workspace }}/Tests/Coverage.cobertura.xml -targetdir:"${{ github.workspace }}/Tests/coveragereport" -reporttypes:"MarkdownSummary;Html" -assemblyfilters:+MinimalApi
+          dotnet reportgenerator -reports:${{ github.workspace }}\Tests\Coverage.cobertura.xml -targetdir:"${{ github.workspace }}\Tests\coveragereport" -reporttypes:"MarkdownSummary;Html" -assemblyfilters:+MinimalApi
       - name: Upload code coverage report
         uses: actions/upload-artifact@v2
         with:
           name: coveragereport
-          path: ${{ github.workspace }}/Tests/coveragereport
+          path: ${{ github.workspace }}\Tests\coveragereport
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
         if: github.event_name == 'pull_request'
         with:
           recreate: true
-          path: ${{ github.workspace }}/Tests/coveragereport/Summary.md
+          path: ${{ github.workspace }}\Tests\coveragereport\Summary.md
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}\myapp
 
       - name: dotnet publish to Docker
         run: dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer
@@ -67,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: ${{env.DOTNET_ROOT}}\myapp
       
       - name: Login with Github Container registry
         uses: docker/login-action@v2

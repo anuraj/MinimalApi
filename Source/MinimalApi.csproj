@@ -6,7 +6,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UserSecretsId>c863d8a7-6953-45aa-baa6-3b932debfdd0</UserSecretsId>
 		<ContainerImageName>ghcr.io/anuraj/minimalapi</ContainerImageName>
-		<ContainerImageTag>1.0.0</ContainerImageTag>
+		<ContainerImageTag Condition="'$(BUILD_VERSION)' == ''">1.0.0.0</ContainerImageTag>
+		<ContainerImageTag Condition="'$(BUILD_VERSION)' != ''">$(BUILD_VERSION)</ContainerImageTag>
 	</PropertyGroup>
 
 	<ItemGroup>
