@@ -61,7 +61,7 @@ jobs:
           path: ${{ github.workspace }}\Tests\coveragereport\Summary.md
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}\myapp
+        run: dotnet publish -c Release -o ${{ github.workspace }}\myapp
 
       - name: dotnet publish to Docker
         run: dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer
@@ -70,7 +70,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}\myapp
+          path: ${{ github.workspace }}\myapp
       
       - name: Login with Github Container registry
         uses: docker/login-action@v2
