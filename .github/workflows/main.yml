@@ -19,19 +19,17 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2.5.0
-      - name: Setting up build version
+      - name: set release date
         run: |
-          $version = "1.0.{0:#}" -f $($Env:GITHUB_RUN_NUMBER)
-          echo "BUILD_VERSION=$version" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+          echo "BUILD_VERSION=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v3.0.3
         with:
           dotnet-version: "7.0.x"
-          include-prerelease: true
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
@@ -41,27 +39,26 @@ jobs:
           dotnet new tool-manifest
           dotnet tool install dotnet-reportgenerator-globaltool
           dotnet tool install dotnet-coverage
-
       - name: Run the unit tests with code coverage
-        run: dotnet coverage collect dotnet test --filter TodoApiTests --output ${{ github.workspace }}\Tests\Coverage --output-format cobertura
+        run: dotnet coverage collect dotnet test --filter TodoApiTests --output ${{ github.workspace }}/Tests/Coverage --output-format cobertura
 
       - name: Generate Report
         run: |
-          dotnet reportgenerator -reports:${{ github.workspace }}\Tests\Coverage.cobertura.xml -targetdir:"${{ github.workspace }}\Tests\coveragereport" -reporttypes:"MarkdownSummary;Html" -assemblyfilters:+MinimalApi
+          dotnet reportgenerator -reports:${{ github.workspace }}/Tests/Coverage.cobertura.xml -targetdir:"${{ github.workspace }}/Tests/coveragereport" -reporttypes:"MarkdownSummary;Html" -assemblyfilters:+MinimalApi
       - name: Upload code coverage report
         uses: actions/upload-artifact@v2
         with:
           name: coveragereport
-          path: ${{ github.workspace }}\Tests\coveragereport
+          path: ${{ github.workspace }}/Tests/coveragereport
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
         if: github.event_name == 'pull_request'
         with:
           recreate: true
-          path: ${{ github.workspace }}\Tests\coveragereport\Summary.md
+          path: ${{ github.workspace }}/Tests/coveragereport/Summary.md
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{ github.workspace }}\myapp
+        run: dotnet publish -c Release -o ${{ github.workspace }}/myapp
 
       - name: dotnet publish to Docker
         run: dotnet publish --os linux --arch x64 -p:PublishProfile=DefaultContainer
@@ -70,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: .net-app
-          path: ${{ github.workspace }}\myapp
+          path: ${{ github.workspace }}/myapp
       
       - name: Login with Github Container registry
         uses: docker/login-action@v2
@@ -80,5 +77,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Publish to Github Container registry
-        run: docker push ghcr.io/anuraj/minimalapi:1.0.0
-
+        run: docker push ghcr.io/anuraj/minimalapi:${{ env.BUILD_VERSION }}
