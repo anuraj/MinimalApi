@@ -57,8 +57,8 @@ jobs:
           path: ${{ github.workspace }}/Tests/coveragereport/Summary.md
 
       - name: Configuring Tokens
+        working-directory: ./Source
         run: |
-          working-directory: ./Source
           echo "USER1_TOKEN=$(dotnet user-jwts create --claim Username=user1 --claim Email=user1@example.com --name user1 --output token)" >> $GITHUB_ENV
           echo "USER2_TOKEN=$(dotnet user-jwts create --claim Username=user2 --claim Email=user2@example.com --name user2 --output token)" >> $GITHUB_ENV
 
