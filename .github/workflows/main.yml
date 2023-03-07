@@ -39,6 +39,10 @@ jobs:
           dotnet new tool-manifest
           dotnet tool install dotnet-reportgenerator-globaltool
           dotnet tool install dotnet-coverage
+      - name: Configuring Tokens
+        run: |
+          echo "USER1_TOKEN=$(dotnet user-jwts create --claim Username=user1 --claim Email=user1@example.com --name user1 --output token)" >> $GITHUB_ENV
+          echo "USER2_TOKEN=$(dotnet user-jwts create --claim Username=user2 --claim Email=user2@example.com --name user2 --output token)" >> $GITHUB_ENV
       - name: Run the unit tests with code coverage
         run: dotnet coverage collect dotnet test --filter TodoApiTests --output ${{ github.workspace }}/Tests/Coverage --output-format cobertura
 
@@ -68,13 +72,13 @@ jobs:
         with:
           name: .net-app
           path: ${{ github.workspace }}/myapp
-      
+
       - name: Login with Github Container registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Publish to Github Container registry
         run: docker push ghcr.io/anuraj/minimalapi:${{ env.BUILD_VERSION }}
