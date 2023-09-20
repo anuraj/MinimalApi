@@ -165,7 +165,7 @@ app.MapGroup("/todoitems")
         stopwatch.Stop();
         var elapsed = stopwatch.ElapsedMilliseconds;
         var response = efiContext.HttpContext.Response;
-        response.Headers.Add("X-Response-Time", $"{elapsed} milliseconds");
+        response.Headers.TryAdd("X-Response-Time", $"{elapsed} milliseconds");
         return result;
     });
 
