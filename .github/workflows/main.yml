@@ -41,7 +41,7 @@ jobs:
           dotnet tool install dotnet-reportgenerator-globaltool
           dotnet tool install dotnet-coverage
       - name: Run the unit tests with code coverage
-        run: dotnet coverage collect dotnet test --filter TodoApiTests --output ${{ github.workspace }}/Tests/Coverage/Coverage.cobertura.xml --output-format cobertura
+        run: dotnet coverage collect dotnet test --filter TodoApiTests --output ${{ github.workspace }}/Tests/Coverage.cobertura.xml --output-format cobertura
       - name: Generate Report
         run: |
           dotnet reportgenerator -reports:${{ github.workspace }}/Tests/Coverage.cobertura.xml -targetdir:"${{ github.workspace }}/Tests/coveragereport" -reporttypes:"MarkdownSummary;Html" -assemblyfilters:+MinimalApi
@@ -62,7 +62,6 @@ jobs:
         run: |
           echo "USER1_TOKEN=$(dotnet user-jwts create --claim Username=user1 --claim Email=user1@example.com --name user1 --output token)" >> $GITHUB_ENV
           echo "USER2_TOKEN=$(dotnet user-jwts create --claim Username=user2 --claim Email=user2@example.com --name user2 --output token)" >> $GITHUB_ENV
-
       - name: Running Integration Tests
         run: dotnet test --filter TodoApiIntegrationTests
 
