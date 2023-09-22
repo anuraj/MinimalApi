@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using MinimalApi.Repository;
 
 namespace MinimalApi;
 
@@ -14,35 +15,37 @@ public static class TodoApi
         return groups;
     }
 
-    internal static async Task<IResult> GetAllTodoItems(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, [FromQuery(Name = "page")] int? page = 1, [FromQuery(Name = "pageSize")] int? pageSize = 10)
+    internal static async Task<IResult> GetAllTodoItems([FromKeyedServices("big")] IDataRepository dataRepository, IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, [FromQuery(Name = "page")] int? page = 1, [FromQuery(Name = "pageSize")] int? pageSize = 10)
     {
-        using var dbContext = dbContextFactory.CreateDbContext();
-        pageSize ??= 10;
-        page ??= 1;
+        // using var dbContext = dbContextFactory.CreateDbContext();
+        // pageSize ??= 10;
+        // page ??= 1;
 
-        var skipAmount = pageSize * (page - 1);
-        var queryable = dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value).AsQueryable();
-        var results = await queryable
-            .Skip(skipAmount ?? 1)
-            .Take(pageSize ?? 10).Select(t => new TodoItemOutput(t.Title, t.IsCompleted, t.CreatedOn)).ToListAsync();
-        var totalNumberOfRecords = await queryable.CountAsync();
-        var mod = totalNumberOfRecords % pageSize;
-        var totalPageCount = (totalNumberOfRecords / pageSize) + (mod == 0 ? 0 : 1);
+        // var skipAmount = pageSize * (page - 1);
+        // var queryable = dbContext.TodoItems.Where(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value).AsQueryable();
+        // var results = await queryable
+        //     .Skip(skipAmount ?? 1)
+        //     .Take(pageSize ?? 10).Select(t => new TodoItemOutput(t.Title, t.IsCompleted, t.CreatedOn)).ToListAsync();
+        // var totalNumberOfRecords = await queryable.CountAsync();
+        // var mod = totalNumberOfRecords % pageSize;
+        // var totalPageCount = (totalNumberOfRecords / pageSize) + (mod == 0 ? 0 : 1);
 
-        return TypedResults.Ok(new PagedResults<TodoItemOutput>()
-        {
-            PageNumber = page.Value,
-            PageSize = pageSize!.Value,
-            Results = results,
-            TotalNumberOfPages = totalPageCount!.Value,
-            TotalNumberOfRecords = totalNumberOfRecords
-        });
+        // return TypedResults.Ok(new PagedResults<TodoItemOutput>()
+        // {
+        //     PageNumber = page.Value,
+        //     PageSize = pageSize!.Value,
+        //     Results = results,
+        //     TotalNumberOfPages = totalPageCount!.Value,
+        //     TotalNumberOfRecords = totalNumberOfRecords
+        // });
+
+        return TypedResults.Ok(await dataRepository.GetPagedResults(user, page, pageSize));
     }
 
     internal static async Task<IResult> GetTodoItemById(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id)
     {
         using var dbContext = dbContextFactory.CreateDbContext();
-        return await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todo ? TypedResults.Ok(new TodoItemOutput(todo.Title, todo.IsCompleted, todo.CreatedOn)) : TypedResults.NotFound();
+        return await dbContext.TodoItems.FirstOrDefaultAsync(t => t.User.Username == user.FindFirst(ClaimTypes.NameIdentifier)!.Value && t.Id == id) is TodoItem todo ? TypedResults.Ok(new TodoItemOutput(todo.Title!, todo.IsCompleted, todo.CreatedOn)) : TypedResults.NotFound();
     }
 
     internal static async Task<IResult> CreateTodoItem(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, TodoItemInput todoItemInput, IValidator<TodoItemInput> todoItemInputValidator)
@@ -66,7 +69,7 @@ public static class TodoApi
         todoItem.CreatedOn = DateTime.UtcNow;
         dbContext.TodoItems.Add(todoItem);
         await dbContext.SaveChangesAsync();
-        return TypedResults.Created($"/todoitems/{todoItem.Id}", new TodoItemOutput(todoItem.Title, todoItem.IsCompleted, todoItem.CreatedOn));
+        return TypedResults.Created($"/todoitems/{todoItem.Id}", new TodoItemOutput(todoItem.Title!, todoItem.IsCompleted, todoItem.CreatedOn));
     }
 
     internal static async Task<IResult> UpdateTodoItem(IDbContextFactory<TodoDbContext> dbContextFactory, ClaimsPrincipal user, int id, TodoItemInput todoItemInput)

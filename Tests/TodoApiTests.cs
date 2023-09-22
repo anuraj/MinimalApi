@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MinimalApi.Data;
+using MinimalApi.Repository;
 using MinimalApi.ViewModels;
 
 namespace MinimalApi.Tests;
@@ -14,8 +15,10 @@ public class TodoApiTests
     {
         var testDbContextFactory = new TestDbContextFactory();
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
+        
+        var dataRepository = new TestDataRepository(testDbContextFactory);
 
-        var todoItemsResult = await TodoApi.GetAllTodoItems(testDbContextFactory, user);
+        var todoItemsResult = await TodoApi.GetAllTodoItems(dataRepository, testDbContextFactory, user, 1, 10);
 
         Assert.IsType<Ok<PagedResults<TodoItemOutput>>>(todoItemsResult);
     }
@@ -149,5 +152,30 @@ public class TestDbContextFactory : IDbContextFactory<TodoDbContext>
         var todoDbContext = new TodoDbContext(_options);
         todoDbContext.Database.EnsureCreated();
         return todoDbContext;
+    }
+}
+
+public class TestDataRepository : IDataRepository
+{
+    private readonly TestDbContextFactory _testDbContextFactory;
+
+    public TestDataRepository(TestDbContextFactory testDbContextFactory)
+    {
+        _testDbContextFactory = testDbContextFactory;
+    }
+    public async Task<PagedResults<TodoItemOutput>> GetPagedResults(ClaimsPrincipal user, int? page = 1, int? pageSize = 10)
+    {
+        var items = new List<TodoItemOutput>();
+        for (int i = 1; i <= 10; i++)
+        {
+            items.Add(new TodoItemOutput($"Todo item {i}", false, DateTime.Now));
+        }
+        return new PagedResults<TodoItemOutput>(){
+            PageNumber = page.Value,
+            PageSize = pageSize.Value,
+            Results = items,
+            TotalNumberOfPages = 1,
+            TotalNumberOfRecords = 10
+        };
     }
 }

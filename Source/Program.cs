@@ -1,5 +1,7 @@
 
 
+using MinimalApi.Repository;
+
 var builder = WebApplication.CreateBuilder(args);
 var jwtPolicyName = "jwt";
 
@@ -91,8 +93,8 @@ builder.Services.AddSwaggerGen(setup =>
 {
     setup.SwaggerDoc("v1", new OpenApiInfo()
     {
-        Description = "ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API," +
-            "Entity Framework Core, Token authentication, Versioning, Unit Testing and Open API.",
+        Description = "ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API," +
+            "Entity Framework Core, Token authentication, Versioning, Unit Testing, Rate Limiting and Open API.",
         Title = "Todo Api",
         Version = "v1",
         Contact = new OpenApiContact()
@@ -120,6 +122,8 @@ builder.Services.AddHealthChecks().AddDbContextCheck<TodoDbContext>();
 
 builder.Services.AddScoped<IValidator<TodoItemInput>, TodoItemInputValidator>();
 builder.Services.AddScoped<IValidator<UserInput>, UserInputValidator>();
+
+builder.Services.AddKeyedScoped<IDataRepository, DataRepository>("DataRepository");
 
 var app = builder.Build();
 

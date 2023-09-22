@@ -1,15 +1,8 @@
 ﻿namespace MinimalApi.ViewModels;
 
-public class TodoItemOutput
+public class TodoItemOutput(string title, bool isCompleted, DateTime createdOn)
 {
-    public TodoItemOutput(string? title, bool isCompleted, DateTime createdOn)
-    {
-        Title = title;
-        IsCompleted = isCompleted;
-        CreatedOn = createdOn;
-    }
-
-    public string? Title { get; set; }
-    public bool IsCompleted { get; set; }
-    public DateTime CreatedOn { get; set; }
+    public string Title { get; set; } = title;
+    public bool IsCompleted { get; set; } = isCompleted;
+    public DateTime CreatedOn { get; set; } = createdOn;
 }
