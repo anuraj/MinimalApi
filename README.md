@@ -9,7 +9,7 @@ ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET C
 ## September 22, 2023
 
 * Upgraded to .NET 8.0 RC1.
-* Implemented the keyed services for Minimal APIs
+* Implemented the keyed services for Minimal APIs - [Learn more about this feature](https://devblogs.microsoft.com/dotnet/asp-net-core-updates-in-dotnet-8-rc-1/?WT.mc_id=DT-MVP-5002040)
 
 ## November 29, 2022
 * Implemented Rate Limiting support for Web API in .NET 7 - [Learn more about this feature](https://learn.microsoft.com/aspnet/core/performance/rate-limit?view=aspnetcore-7.0&WT.mc_id=DT-MVP-5002040)
