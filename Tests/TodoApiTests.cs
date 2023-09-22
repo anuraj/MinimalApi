@@ -16,7 +16,7 @@ public class TodoApiTests
         var testDbContextFactory = new TestDbContextFactory();
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
         
-        var dataRepository = new TestDataRepository(testDbContextFactory);
+        var dataRepository = new TestDataRepository();
 
         var todoItemsResult = await TodoApi.GetAllTodoItems(dataRepository, testDbContextFactory, user, 1, 10);
 
@@ -157,12 +157,6 @@ public class TestDbContextFactory : IDbContextFactory<TodoDbContext>
 
 public class TestDataRepository : IDataRepository
 {
-    private readonly TestDbContextFactory _testDbContextFactory;
-
-    public TestDataRepository(TestDbContextFactory testDbContextFactory)
-    {
-        _testDbContextFactory = testDbContextFactory;
-    }
     public async Task<PagedResults<TodoItemOutput>> GetPagedResults(ClaimsPrincipal user, int? page = 1, int? pageSize = 10)
     {
         var items = new List<TodoItemOutput>();
@@ -170,9 +164,10 @@ public class TestDataRepository : IDataRepository
         {
             items.Add(new TodoItemOutput($"Todo item {i}", false, DateTime.Now));
         }
+        await Task.Delay(1);    //Fix for async warning
         return new PagedResults<TodoItemOutput>(){
-            PageNumber = page.Value,
-            PageSize = pageSize.Value,
+            PageNumber = page!.Value,
+            PageSize = pageSize!.Value,
             Results = items,
             TotalNumberOfPages = 1,
             TotalNumberOfRecords = 10
