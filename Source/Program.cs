@@ -91,7 +91,7 @@ builder.Services.AddSwaggerGen(setup =>
 {
     setup.SwaggerDoc("v1", new OpenApiInfo()
     {
-        Description = "ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API," +
+        Description = "ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API," +
             "Entity Framework Core, Token authentication, Versioning, Unit Testing and Open API.",
         Title = "Todo Api",
         Version = "v1",

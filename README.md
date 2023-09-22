@@ -1,6 +1,6 @@
-# ASP.NET Core 7.0 - Minimal API Example.
+# ASP.NET Core 8.0 - Minimal API Example.
 
-ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, Entity Framework Core, Token authentication, Versioning, Unit Testing, Integration Testing and Open API.
+ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, Entity Framework Core, Token authentication, Versioning, Unit Testing, Integration Testing and Open API.
 
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
 
@@ -8,6 +8,7 @@ ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET C
 
 ## September 22, 2023
 * Upgraded to .NET 8 RC1 - [More details](https://devblogs.microsoft.com/dotnet/announcing-dotnet-8-rc1/?WT.mc_id=DT-MVP-5002040)
+* No other .NET 8 features implemented.
 
 ## November 29, 2022
 * Implemented Rate Limiting support for Web API in .NET 7 - [Learn more about this feature](https://learn.microsoft.com/aspnet/core/performance/rate-limit?view=aspnetcore-7.0&WT.mc_id=DT-MVP-5002040)
