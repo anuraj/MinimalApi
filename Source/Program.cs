@@ -91,7 +91,7 @@ builder.Services.AddSwaggerGen(setup =>
 {
     setup.SwaggerDoc("v1", new OpenApiInfo()
     {
-        Description = "ASP.NET Core 7.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API," +
+        Description = "ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API," +
             "Entity Framework Core, Token authentication, Versioning, Unit Testing and Open API.",
         Title = "Todo Api",
         Version = "v1",
@@ -165,7 +165,7 @@ app.MapGroup("/todoitems")
         stopwatch.Stop();
         var elapsed = stopwatch.ElapsedMilliseconds;
         var response = efiContext.HttpContext.Response;
-        response.Headers.Add("X-Response-Time", $"{elapsed} milliseconds");
+        response.Headers.TryAdd("X-Response-Time", $"{elapsed} milliseconds");
         return result;
     });
 
