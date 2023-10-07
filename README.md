@@ -6,18 +6,18 @@ ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET C
 
 ## Features
 
-## September 22, 2023
+### September 22, 2023
 * Upgraded to .NET 8 RC1 - [More details](https://devblogs.microsoft.com/dotnet/announcing-dotnet-8-rc1/?WT.mc_id=DT-MVP-5002040)
 * No other .NET 8 features implemented.
 
-## November 29, 2022
+### November 29, 2022
 * Implemented Rate Limiting support for Web API in .NET 7 - [Learn more about this feature](https://learn.microsoft.com/aspnet/core/performance/rate-limit?view=aspnetcore-7.0&WT.mc_id=DT-MVP-5002040)
 * Removed GraphQL support.
 
-## November 22, 2022
+### November 22, 2022
 * Publishing Code coverage results as artifact
 
-## November 21, 2022
+### November 21, 2022
 * DotNet CLI - Container image publish support added - [Learn more about this feature](https://devblogs.microsoft.com/dotnet/announcing-builtin-container-support-for-the-dotnet-sdk/?WT.mc_id=DT-MVP-5002040)
 * Modified authentication code to support `dotnet user-jwts`. Removed the `token` endpoint
 * How to create token using `dotnet user-jwts`.
@@ -27,18 +27,18 @@ ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET C
 
 You can find more details here - [Manage JSON Web Tokens in development with dotnet user-jwts](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/jwt-authn?view=aspnetcore-7.0&tabs=windows&WT.mc_id=DT-MVP-5002040)
 
-## November 18, 2022
+### November 18, 2022
 * Moved from .NET 6.0 to .NET 7.0
 * Endpoint Filters added - [Learn more about this feature](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis/min-api-filters?view=aspnetcore-7.0&WT.mc_id=DT-MVP-5002040)
 
-## October 18, 2022
+### October 18, 2022
 * NuGet packages upgraded to RC.
 
-## July 25, 2022
+### July 25, 2022
 * Route groups Implemented - [Learn more about this feature](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-7.0&WT.mc_id=DT-MVP-5002040#route-groups)
 * Code coverage implemented.
 
-## July 24, 2022
+### July 24, 2022
 * Upgraded to .NET 7 - Preview.
 * Added Unit Tests (Unit Tests support for Minimal API available in .NET 7)
 
