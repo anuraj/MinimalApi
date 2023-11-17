@@ -1,17 +1,11 @@
 ﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
-using Microsoft.EntityFrameworkCore;
-
-using MinimalApi.Models;
 
 using System.Security.Cryptography;
 
 namespace MinimalApi.Data;
 
-public class TodoDbContext : DbContext
+public class TodoDbContext(DbContextOptions<TodoDbContext> options) : DbContext(options)
 {
-    public TodoDbContext(DbContextOptions<TodoDbContext> options)
-        : base(options) { }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<TodoItem>().ToTable("TodoItems", t => t.IsTemporal());

@@ -11,20 +11,20 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Asp.Versioning.Http" Version="6.3.1" />
-		<PackageReference Include="FluentValidation.AspNetCore" Version="11.2.2" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0-rc.1.*" />
-		<PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.0-rc.1.*" />
-		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.0-rc.1.*" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0-rc.1.*">
+		<PackageReference Include="Asp.Versioning.Http" Version="7.1.0" />
+		<PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0-rc.1.*" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0-rc.1.*" />
-		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.0-rc.1.*" />
-		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0-rc.1.*" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<InternalsVisibleTo Include="$(AssemblyName).Tests" />
