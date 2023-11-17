@@ -5,6 +5,8 @@ ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET C
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
 
 ## Features
+### November 17, 2023
+* Upgraded to .NET 8
 
 ### September 22, 2023
 * Upgraded to .NET 8 RC1 - [More details](https://devblogs.microsoft.com/dotnet/announcing-dotnet-8-rc1/?WT.mc_id=DT-MVP-5002040)
