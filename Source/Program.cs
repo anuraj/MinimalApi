@@ -1,7 +1,18 @@
-
-
 var builder = WebApplication.CreateBuilder(args);
 var jwtPolicyName = "jwt";
+
+builder.Services.AddMiniProfiler(options =>
+{
+    options.ShouldProfile = request =>
+    {
+        if(request.Path.StartsWithSegments("/swagger"))
+        {
+            return false;
+        }
+
+        return true;
+    };
+}).AddEntityFramework();
 
 builder.Services.AddRateLimiter(limiterOptions =>
 {
@@ -51,26 +62,6 @@ builder.Services.AddRateLimiter(limiterOptions =>
     });
 });
 
-static string GetUserEndPoint(HttpContext context)
-{
-    var tokenValue = string.Empty;
-    if (AuthenticationHeaderValue.TryParse(context.Request.Headers["Authorization"], out var authHeader))
-    {
-        tokenValue = authHeader.Parameter;
-    }
-    var email = "";
-    if (!string.IsNullOrEmpty(tokenValue))
-    {
-        var handler = new JwtSecurityTokenHandler();
-        var token = handler.ReadJwtToken(tokenValue);
-        email = token.Claims.First(claim => claim.Type == "Email").Value;
-    }
-
-    return $"User {email ?? "Anonymous"} endpoint:{context.Request.Path}"
-   + $" {context.Connection.RemoteIpAddress}";
-}
-
-
 builder.WebHost.UseKestrel(options => options.AddServerHeader = false);
 builder.Services.AddHttpContextAccessor();
 
@@ -84,7 +75,8 @@ builder.Services.AddApiVersioning(options =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication("Bearer").AddJwtBearer();
-builder.Services.AddDbContextFactory<TodoDbContext>(options => options.UseInMemoryDatabase($"MinimalApiDb-{Guid.NewGuid()}"));
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContextFactory<TodoDbContext>(options => options.UseSqlServer(connectionString));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(setup =>
@@ -122,6 +114,8 @@ builder.Services.AddScoped<IValidator<TodoItemInput>, TodoItemInputValidator>();
 builder.Services.AddScoped<IValidator<UserInput>, UserInputValidator>();
 
 var app = builder.Build();
+
+app.UseMiniProfiler();
 
 if (app.Environment.IsDevelopment())
 {
@@ -187,6 +181,29 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.Run();
+
+
+
+static string GetUserEndPoint(HttpContext context)
+{
+    var tokenValue = string.Empty;
+    if (AuthenticationHeaderValue.TryParse(context.Request.Headers["Authorization"], out var authHeader))
+    {
+        tokenValue = authHeader.Parameter;
+    }
+    var email = "";
+    if (!string.IsNullOrEmpty(tokenValue))
+    {
+        var handler = new JwtSecurityTokenHandler();
+        var token = handler.ReadJwtToken(tokenValue);
+        email = token.Claims.First(claim => claim.Type == "Email").Value;
+    }
+
+    return $"User {email ?? "Anonymous"} endpoint:{context.Request.Path}"
+   + $" {context.Connection.RemoteIpAddress}";
+}
+
+
 
 //For integration testing
 public partial class Program { }
