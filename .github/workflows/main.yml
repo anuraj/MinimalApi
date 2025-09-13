@@ -29,7 +29,7 @@ jobs:
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4.3.0
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "10.0.x"
           dotnet-quality: "preview"
 
       - name: Build with dotnet
