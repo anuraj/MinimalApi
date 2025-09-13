@@ -51,7 +51,7 @@ public class TodoApiTests
         var title = "This todo item from Unit test";
         var todoItemInput = new TodoItemInput() { IsCompleted = false, Title = title };
         var todoItemOutputResult = await TodoApi.CreateTodoItem(
-            testDbContextFactory, user, todoItemInput, new TodoItemInputValidator(testDbContextFactory));
+            testDbContextFactory, user, todoItemInput);
 
         Assert.IsType<Created<TodoItemOutput>>(todoItemOutputResult);
         var createdTodoItemOutput = todoItemOutputResult as Created<TodoItemOutput>;
@@ -70,7 +70,7 @@ public class TodoApiTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput();
-        var todoItemOutputResult = await TodoApi.CreateTodoItem(testDbContextFactory, user, todoItemInput, new TodoItemInputValidator(testDbContextFactory));
+        var todoItemOutputResult = await TodoApi.CreateTodoItem(testDbContextFactory, user, todoItemInput);
 
         Assert.IsType<ValidationProblem>(todoItemOutputResult);
     }

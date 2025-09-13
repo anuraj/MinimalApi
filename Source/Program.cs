@@ -87,39 +87,9 @@ builder.Services.AddAuthentication("Bearer").AddJwtBearer();
 builder.Services.AddDbContextFactory<TodoDbContext>(options => options.UseInMemoryDatabase($"MinimalApiDb-{Guid.NewGuid()}"));
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(setup =>
-{
-    setup.SwaggerDoc("v1", new OpenApiInfo()
-    {
-        Description = "ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API," +
-            "Entity Framework Core, Token authentication, Versioning, Unit Testing and Open API.",
-        Title = "Todo Api",
-        Version = "v1",
-        Contact = new OpenApiContact()
-        {
-            Name = "anuraj",
-            Url = new Uri("https://dotnetthoughts.net")
-        }
-    });
-
-    setup.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer"
-    });
-
-    setup.OperationFilter<AuthorizationHeaderOperationHeader>();
-    setup.OperationFilter<ApiVersionOperationFilter>();
-});
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddHealthChecks().AddDbContextCheck<TodoDbContext>();
-
-builder.Services.AddScoped<IValidator<TodoItemInput>, TodoItemInputValidator>();
-builder.Services.AddScoped<IValidator<UserInput>, UserInputValidator>();
 
 var app = builder.Build();
 
@@ -155,7 +125,6 @@ app.MapGroup("/todoitems")
     .WithTags("Todo Items")
     .RequireAuthorization()
     .RequireRateLimiting(jwtPolicyName)
-    .WithOpenApi()
     .WithMetadata()
     .WithApiVersionSet(versionSet)
     .AddEndpointFilter(async (efiContext, next) =>
@@ -174,7 +143,7 @@ app.MapGet("/health", async (HealthCheckService healthCheckService) =>
     var report = await healthCheckService.CheckHealthAsync();
     return report.Status == HealthStatus.Healthy ?
         Results.Ok(report) : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
-}).WithOpenApi()
+})
 .WithTags(new[] { "Health" })
 .RequireRateLimiting(jwtPolicyName)
 .Produces(200)
