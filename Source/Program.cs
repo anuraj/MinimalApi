@@ -103,14 +103,6 @@ var versionSet = app.NewApiVersionSet()
                     .HasApiVersion(new ApiVersion(2, 0))
                     .ReportApiVersions()
                     .Build();
-
-app.UseSwagger();
-
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo Api v1");
-});
-
 app.UseWebSockets();
 
 var scope = app.Services.CreateScope();
