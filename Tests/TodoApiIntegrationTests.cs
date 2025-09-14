@@ -76,7 +76,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
         var response = await _httpClient.PutAsync("/todoitems/2",
-            new StringContent(JsonSerializer.Serialize(new TodoItemInput { IsCompleted = true }),
+            new StringContent(JsonSerializer.Serialize(new TodoItemInput { Title = "Updated Todo Item", IsCompleted = true }),
             Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
         var responseStatusCode = response.StatusCode;
 
@@ -101,7 +101,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
-        var response = await _httpClient.PutAsync("/todoitems/3000", new StringContent(JsonSerializer.Serialize(new TodoItemInput { IsCompleted = true }),
+        var response = await _httpClient.PutAsync("/todoitems/3000", new StringContent(JsonSerializer.Serialize(new TodoItemInput { Title = "Test Todo Item", IsCompleted = true }),
             Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
         var responseStatusCode = response.StatusCode;
 
@@ -289,13 +289,13 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
 
     private static async Task<string> GetTokenForUser1()
     {
-        var token = Environment.GetEnvironmentVariable("USER1_TOKEN") ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InVzZXIxIiwic3ViIjoidXNlcjEiLCJqdGkiOiJlNTRlM2JjNyIsIlVzZXJuYW1lIjoidXNlcjEiLCJFbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6MjEyNDQiLCJodHRwczovL2xvY2FsaG9zdDo0NDM3MyIsImh0dHBzOi8vbG9jYWxob3N0OjUwMDEiLCJodHRwOi8vbG9jYWxob3N0OjUwMDAiXSwibmJmIjoxNzAwMTg2MzE5LCJleHAiOjIwMTU1NDYzMTksImlhdCI6MTcwMDE4NjMyMCwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.hf6SeuNrDZXoKj7cFm2FbaswD__M9P2hN6FE4OMSUGg";
+        var token = Environment.GetEnvironmentVariable("USER1_TOKEN") ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InVzZXIxIiwic3ViIjoidXNlcjEiLCJqdGkiOiIzY2E4NGU5YiIsIlVzZXJuYW1lIjoidXNlcjEiLCJFbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6MjEyNDQiLCJodHRwczovL2xvY2FsaG9zdDo0NDM3MyIsImh0dHBzOi8vbG9jYWxob3N0OjUwMDEiLCJodHRwOi8vbG9jYWxob3N0OjUwMDAiXSwibmJmIjoxNzU3ODQxNDIwLCJleHAiOjE3NjU3MDM4MjAsImlhdCI6MTc1Nzg0MTQyMSwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.QRew89SaKTQxoZc5w12CRvY0DURmfJz3jIVEPWqyitU";
         return await Task.Run(() => token);
     }
 
     private static async Task<string> GetTokenForUser2()
     {
-        var token = Environment.GetEnvironmentVariable("USER2_TOKEN") ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InVzZXIyIiwic3ViIjoidXNlcjIiLCJqdGkiOiI5ZTIzNGY3IiwiVXNlcm5hbWUiOiJ1c2VyMiIsIkVtYWlsIjoidXNlcjJAZXhhbXBsZS5jb20iLCJhdWQiOlsiaHR0cDovL2xvY2FsaG9zdDoyMTI0NCIsImh0dHBzOi8vbG9jYWxob3N0OjQ0MzczIiwiaHR0cHM6Ly9sb2NhbGhvc3Q6NTAwMSIsImh0dHA6Ly9sb2NhbGhvc3Q6NTAwMCJdLCJuYmYiOjE3MDAxODYzNzksImV4cCI6MjAxNTU0NjM3OSwiaWF0IjoxNzAwMTg2MzgwLCJpc3MiOiJkb3RuZXQtdXNlci1qd3RzIn0.mgc7LAtmYcDJXfnmPSXr-kjoAlM7ND89yN5pnffrbpw";
+        var token = Environment.GetEnvironmentVariable("USER2_TOKEN") ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6InVzZXIyIiwic3ViIjoidXNlcjIiLCJqdGkiOiJmYzMzMzgzNSIsIlVzZXJuYW1lIjoidXNlcjIiLCJFbWFpbCI6InVzZXIyQGV4YW1wbGUuY29tIiwiYXVkIjpbImh0dHA6Ly9sb2NhbGhvc3Q6MjEyNDQiLCJodHRwczovL2xvY2FsaG9zdDo0NDM3MyIsImh0dHBzOi8vbG9jYWxob3N0OjUwMDEiLCJodHRwOi8vbG9jYWxob3N0OjUwMDAiXSwibmJmIjoxNzU3ODQyNDMyLCJleHAiOjE3NjU3MDQ4MzIsImlhdCI6MTc1Nzg0MjQzMywiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.X-Gxod0JIXe6y1wGSrtE1FfFFeJcGu0cyaSrMRtc_sU";
         return await Task.Run(() => token);
     }
 }
