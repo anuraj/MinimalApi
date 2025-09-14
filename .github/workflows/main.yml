@@ -41,10 +41,10 @@ jobs:
           dotnet tool install dotnet-reportgenerator-globaltool
           dotnet tool install dotnet-coverage
       - name: Run the unit tests with code coverage
-        run: dotnet coverage collect dotnet test --filter-class MinimalApi.Tests.TodoApiTests --filter-not-class MinimalApi.Data.Migrations.* --filter-not-class MinimalApi.Models.TodoItemAudit --filter-not-class MinimalApi.ViewModels.* --output ${{ github.workspace }}/Tests/Coverage.cobertura.xml --output-format cobertura
+        run: dotnet coverage collect dotnet test --filter-class MinimalApi.Tests.TodoApiTests --output ${{ github.workspace }}/Tests/Coverage.cobertura.xml --output-format cobertura
       - name: Generate Report
         run: |
-          dotnet reportgenerator -reports:${{ github.workspace }}/Tests/Coverage.cobertura.xml -targetdir:"${{ github.workspace }}/Tests/coveragereport" -reporttypes:"MarkdownSummary;Html" -assemblyfilters:+MinimalApi
+          dotnet reportgenerator -reports:Coverage.cobertura.xml -targetdir:coveragereport -reporttypes:"MarkdownSummary;Html" -classfilters:"-Microsoft.AspNetCore.OpenApi.Generated;-Microsoft.Extensions.Validation.Generated;-MinimalApi.Data.Migrations.*;-Microsoft.Extensions.Validation.*;-MinimalApi.Models.TodoItemAudit;-System.Runtime.CompilerServices;-MinimalApi.ViewModels.AddVersionToHeaderTransformer;-MinimalApi.ViewModels.BearerSecuritySchemeTransformer" -assemblyfilters:+MinimalApi
       - name: Upload code coverage report
         uses: actions/upload-artifact@v4.6.0
         with:
