@@ -1,6 +1,6 @@
-# ASP.NET Core 8.0 - Minimal API Example.
+# ASP.NET Core 10.0 - Minimal API Example.
 
-ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, Entity Framework Core, Token authentication, Versioning, Unit Testing, Integration Testing and Open API.
+ASP.NET Core 10.0 - Minimal API Example - Todo API implementation using ASP.NET Core Minimal API, Entity Framework Core, Token authentication, Versioning, Scalar Documentation, Unit Testing, Integration Testing and Open API.
 
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
 
