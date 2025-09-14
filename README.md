@@ -12,6 +12,8 @@ ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET C
 * Moved from Old solution format to new slnx format.
 * Implemented CancellationToken
 
+[What is new in ASP.NET 10](https://learn.microsoft.com/aspnet/core/release-notes/aspnetcore-10.0?view=aspnetcore-10.0&WT.mc_id=DT-MVP-5002040)
+
 ### November 17, 2023
 * Upgraded to .NET 8
 
