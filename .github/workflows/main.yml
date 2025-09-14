@@ -62,8 +62,9 @@ jobs:
         run: |
           echo "USER1_TOKEN=$(dotnet user-jwts create --claim Username=user1 --claim Email=user1@example.com --name user1 --output token)" >> $GITHUB_ENV
           echo "USER2_TOKEN=$(dotnet user-jwts create --claim Username=user2 --claim Email=user2@example.com --name user2 --output token)" >> $GITHUB_ENV
+          
       - name: Running Integration Tests
-        run: dotnet test --filter TodoApiIntegrationTests
+        run: dotnet test --filter-class MinimalApi.Tests.TodoApiIntegrationTests
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{ github.workspace }}/myapp
