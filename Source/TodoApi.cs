@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MinimalApi;
 
@@ -87,5 +88,73 @@ public static class TodoApi
         }
 
         return TypedResults.NotFound();
+    }
+
+    internal static void AssociateRateLimiterOptions(RateLimiterOptions limiterOptions)
+    {
+        var jwtPolicyName = "jwt";
+        limiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        limiterOptions.OnRejected = (context, cancellationToken) =>
+        {
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            context.HttpContext.RequestServices.GetService<ILoggerFactory>()?
+                .CreateLogger("Microsoft.AspNetCore.RateLimitingMiddleware")
+                .LogWarning("OnRejected: {GetUserEndPoint}", GetUserEndPoint(context.HttpContext));
+
+            return new ValueTask();
+        };
+
+        limiterOptions.AddPolicy(policyName: jwtPolicyName, partitioner: httpContext =>
+        {
+            var tokenValue = string.Empty;
+            if (AuthenticationHeaderValue.TryParse(httpContext.Request.Headers["Authorization"], out var authHeader))
+            {
+                tokenValue = authHeader.Parameter;
+            }
+
+            var email = string.Empty;
+            var rateLimitWindowInMinutes = 5;
+            var permitLimitAuthorized = 60;
+            var permitLimitAnonymous = 30;
+            if (!string.IsNullOrEmpty(tokenValue))
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var token = handler.ReadJwtToken(tokenValue);
+                email = token.Claims.First(claim => claim.Type == "Email").Value;
+                var dbContext = httpContext.RequestServices.GetRequiredService<TodoDbContext>();
+                var user = dbContext.Users.FirstOrDefault(u => u.Email == email);
+                if (user != null)
+                {
+                    permitLimitAuthorized = user.PermitLimit;
+                    rateLimitWindowInMinutes = user.RateLimitWindowInMinutes;
+                }
+            }
+
+            return RateLimitPartition.GetFixedWindowLimiter(email, _ => new FixedWindowRateLimiterOptions()
+            {
+                PermitLimit = string.IsNullOrEmpty(email) ? permitLimitAnonymous : permitLimitAuthorized,
+                Window = TimeSpan.FromMinutes(rateLimitWindowInMinutes),
+                QueueLimit = 0
+            });
+        });
+    }
+    
+    static string GetUserEndPoint(HttpContext context)
+    {
+        var tokenValue = string.Empty;
+        if (AuthenticationHeaderValue.TryParse(context.Request.Headers["Authorization"], out var authHeader))
+        {
+            tokenValue = authHeader.Parameter;
+        }
+        var email = "";
+        if (!string.IsNullOrEmpty(tokenValue))
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(tokenValue);
+            email = token.Claims.First(claim => claim.Type == "Email").Value;
+        }
+
+        return $"User {email ?? "Anonymous"} endpoint:{context.Request.Path}"
+       + $" {context.Connection.RemoteIpAddress}";
     }
 }
