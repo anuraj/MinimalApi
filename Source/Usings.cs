@@ -1,7 +1,5 @@
-global using FluentValidation;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Diagnostics.HealthChecks;
-global using Microsoft.OpenApi.Models;
 
 global using MinimalApi.Data;
 global using MinimalApi.Models;
