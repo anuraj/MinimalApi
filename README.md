@@ -5,6 +5,13 @@ ASP.NET Core 8.0 - Minimal API Example - Todo API implementation using ASP.NET C
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
 
 ## Features
+### September 14, 2025
+* Upgraded to .NET 10 Preview.
+* Removed Swagger - using Scalar for API documentation.
+* Removed FluentValidation - Using .NET Core validation attributes.
+* Moved from Old solution format to new slnx format.
+* Implemented CancellationToken
+
 ### November 17, 2023
 * Upgraded to .NET 8
 
