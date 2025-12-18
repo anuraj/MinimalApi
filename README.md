@@ -5,6 +5,10 @@ ASP.NET Core 10.0 - Minimal API Example - Todo API implementation using ASP.NET 
 [![Build and Deployment](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml/badge.svg)](https://github.com/anuraj/MinimalApi/actions/workflows/main.yml)
 
 ## Features
+### December 12, 2025
+* Upgraded to .NET 10.
+* Improved CI/CD 
+
 ### September 14, 2025
 * Upgraded to .NET 10 Preview.
 * Removed Swagger - using Scalar for API documentation.
