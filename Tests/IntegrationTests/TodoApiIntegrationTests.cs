@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Net.Http.Headers;
 using MinimalApi.ViewModels;
 
-namespace MinimalApi.Tests;
+namespace MinimalApi.Tests.IntegrationTests;
 
 public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 {
@@ -19,6 +19,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [Trait("Category", "Integration")]
     public async Task DeleteTodoItem(bool getToken = false)
     {
         if (!getToken)
@@ -27,7 +28,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
-        var response = await _httpClient.DeleteAsync("/todoitems/1", TestContext.Current.CancellationToken);
+        var response = await _httpClient.DeleteAsync("/todoitems/1", CancellationToken.None);
         var responseStatusCode = response.StatusCode;
 
         if (!getToken)
@@ -43,6 +44,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [Trait("Category", "Integration")]
     public async Task DeleteTodoItemNonExistingId(bool getToken = false)
     {
         if (!getToken)
@@ -51,7 +53,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
-        var response = await _httpClient.DeleteAsync("/todoitems/200", TestContext.Current.CancellationToken);
+        var response = await _httpClient.DeleteAsync("/todoitems/200", CancellationToken.None);
         var responseStatusCode = response.StatusCode;
 
         if (!getToken)
@@ -67,6 +69,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [Trait("Category", "Integration")]
     public async Task UpdateTodoItem(bool getToken = false)
     {
         if (!getToken)
@@ -77,7 +80,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
         }
         var response = await _httpClient.PutAsync("/todoitems/2",
             new StringContent(JsonSerializer.Serialize(new TodoItemInput { Title = "Updated Todo Item", IsCompleted = true }),
-            Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
+            Encoding.UTF8, "application/json"), CancellationToken.None);
         var responseStatusCode = response.StatusCode;
 
         if (!getToken)
@@ -93,6 +96,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [Trait("Category", "Integration")]
     public async Task UpdateTodoItemNonExistingId(bool getToken = false)
     {
         if (!getToken)
@@ -102,7 +106,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
         var response = await _httpClient.PutAsync("/todoitems/3000", new StringContent(JsonSerializer.Serialize(new TodoItemInput { Title = "Test Todo Item", IsCompleted = true }),
-            Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
+            Encoding.UTF8, "application/json"), CancellationToken.None);
         var responseStatusCode = response.StatusCode;
 
         if (!getToken)
@@ -118,6 +122,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [Trait("Category", "Integration")]
     public async Task CreateTodoItem(bool getToken = false)
     {
         if (!getToken)
@@ -127,7 +132,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
         var response = await _httpClient.PostAsync("/todoitems", new StringContent(JsonSerializer.Serialize(new TodoItemInput { Title = "Test", IsCompleted = false }),
-            Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
+            Encoding.UTF8, "application/json"), CancellationToken.None);
         var responseStatusCode = response.StatusCode;
         if (!getToken)
         {
@@ -143,6 +148,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [Trait("Category", "Integration")]
     public async Task GetTodoItemById(bool getToken = false)
     {
         if (!getToken)
@@ -151,13 +157,13 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
-        var response = await _httpClient.GetAsync("/todoitems/5", TestContext.Current.CancellationToken);
+        var response = await _httpClient.GetAsync("/todoitems/5", CancellationToken.None);
         var responseStatusCode = response.StatusCode;
 
         if (!getToken)
         {
             Assert.Equal(HttpStatusCode.OK, responseStatusCode);
-            var todoItems = JsonSerializer.Deserialize<TodoItemOutput>(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            var todoItems = JsonSerializer.Deserialize<TodoItemOutput>(await response.Content.ReadAsStringAsync(CancellationToken.None));
             Assert.NotNull(todoItems);
         }
         else
@@ -169,6 +175,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [Trait("Category", "Integration")]
     public async Task GetTodoItemByIdNonExistingId(bool getToken = false)
     {
         if (!getToken)
@@ -177,7 +184,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
-        var response = await _httpClient.GetAsync("/todoitems/100", TestContext.Current.CancellationToken);
+        var response = await _httpClient.GetAsync("/todoitems/100", CancellationToken.None);
         var responseStatusCode = response.StatusCode;
 
         if (!getToken)
@@ -193,6 +200,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
+    [Trait("Category", "Integration")]
     public async Task GetTodoItems(bool getToken = false)
     {
         if (!getToken)
@@ -201,13 +209,13 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             Assert.NotNull(token);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
-        var response = await _httpClient.GetAsync("/todoitems", TestContext.Current.CancellationToken);
+        var response = await _httpClient.GetAsync("/todoitems", CancellationToken.None);
         var responseStatusCode = response.StatusCode;
         if (!getToken)
         {
             Assert.Equal(HttpStatusCode.OK, responseStatusCode);
 
-            var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            var responseContent = await response.Content.ReadAsStringAsync(CancellationToken.None);
             var todoItems = JsonSerializer.Deserialize<PagedResults<TodoItemOutput>>(responseContent);
             Assert.NotNull(todoItems);
         }
@@ -222,6 +230,7 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     [InlineData(false, "1.0")]
     [InlineData(true, "2.0")]
     [InlineData(false, "2.0")]
+    [Trait("Category", "Integration")]
     public async Task GetTodoItemsWithVersionHeader(bool getToken = false, string version = "1.0")
     {
         if (!getToken)
@@ -231,13 +240,13 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
         _httpClient.DefaultRequestHeaders.Add("api-version", version);
-        var response = await _httpClient.GetAsync("/todoitems", TestContext.Current.CancellationToken);
+        var response = await _httpClient.GetAsync("/todoitems", CancellationToken.None);
         var responseStatusCode = response.StatusCode;
         if (!getToken)
         {
             Assert.Equal(HttpStatusCode.OK, responseStatusCode);
 
-            var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            var responseContent = await response.Content.ReadAsStringAsync(CancellationToken.None);
             var todoItems = JsonSerializer.Deserialize<PagedResults<TodoItemOutput>>(responseContent);
             Assert.NotNull(todoItems);
         }
@@ -248,41 +257,43 @@ public class TodoApiIntegrationTests : IClassFixture<WebApplicationFactory<Progr
     }
 
     [Fact(Skip = "Running this test will exhaust the anonymous request limit - which fails the other tests")]
+    [Trait("Category", "Integration")]
     public async Task GetHealthWithoutToken()
     {
-        var response = await _httpClient.GetAsync("/health", TestContext.Current.CancellationToken);
+        var response = await _httpClient.GetAsync("/health", CancellationToken.None);
         var responseStatusCode = response.StatusCode;
         Assert.Equal(HttpStatusCode.OK, responseStatusCode);
 
         for (int i = 0; i < 29; i++)
         {
-            response = await _httpClient.GetAsync("/health", TestContext.Current.CancellationToken);
+            response = await _httpClient.GetAsync("/health", CancellationToken.None);
             responseStatusCode = response.StatusCode;
             Assert.Equal(HttpStatusCode.OK, responseStatusCode);
         }
 
-        response = await _httpClient.GetAsync("/health", TestContext.Current.CancellationToken);
+        response = await _httpClient.GetAsync("/health", CancellationToken.None);
         responseStatusCode = response.StatusCode;
         Assert.Equal(HttpStatusCode.TooManyRequests, responseStatusCode);
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public async Task GetHealthWithToken()
     {
         var token = await GetTokenForUser2();
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        var response = await _httpClient.GetAsync("/health", TestContext.Current.CancellationToken);
+        var response = await _httpClient.GetAsync("/health", CancellationToken.None);
         var responseStatusCode = response.StatusCode;
         Assert.Equal(HttpStatusCode.OK, responseStatusCode);
 
         for (int i = 0; i < 59; i++)
         {
-            response = await _httpClient.GetAsync("/health", TestContext.Current.CancellationToken);
+            response = await _httpClient.GetAsync("/health", CancellationToken.None);
             responseStatusCode = response.StatusCode;
             Assert.Equal(HttpStatusCode.OK, responseStatusCode);
         }
 
-        response = await _httpClient.GetAsync("/health", TestContext.Current.CancellationToken);
+        response = await _httpClient.GetAsync("/health", CancellationToken.None);
         responseStatusCode = response.StatusCode;
         Assert.Equal(HttpStatusCode.TooManyRequests, responseStatusCode);
     }

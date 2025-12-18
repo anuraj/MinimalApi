@@ -4,10 +4,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
-    <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.msbuild">
@@ -20,7 +16,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="xunit.v3" />
+      <PackageReference Include="Microsoft.NET.Test.Sdk" />
+      <PackageReference Include="xunit" />
+      <PackageReference Include="xunit.runner.visualstudio">
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PrivateAssets>all</PrivateAssets>
+      </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Source\MinimalApi.csproj" />
