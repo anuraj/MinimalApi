@@ -30,8 +30,7 @@ jobs:
         uses: actions/setup-dotnet@v4.3.0
         with:
           dotnet-version: "10.0.x"
-          dotnet-quality: "latest"
-
+          dotnet-quality: "ga"
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
