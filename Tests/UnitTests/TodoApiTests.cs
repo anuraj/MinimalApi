@@ -29,9 +29,10 @@ public class TodoApiTests
     public async Task GetTodoItemById_ReturnsOkResultOfTodoItem()
     {
         var testDbContextFactory = new TestDbContextFactory();
+
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
-        var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 1, CancellationToken.None);
+        var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 10, CancellationToken.None);
 
         Assert.IsType<Ok<TodoItemOutput>>(todoItemResult);
     }
@@ -103,7 +104,7 @@ public class TodoApiTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
-        var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 1, todoItemInput, CancellationToken.None);
+        var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 10, todoItemInput, CancellationToken.None);
 
         Assert.IsType<NoContent>(result);
         var updateResult = result as NoContent;
