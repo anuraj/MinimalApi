@@ -18,7 +18,7 @@ public class TodoApiTests
         var testDbContextFactory = new TestDbContextFactory();
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
-        var todoItemsResult = await TodoApi.GetAllTodoItems(testDbContextFactory, user);
+        var todoItemsResult = await TodoApi.GetAllTodoItems(testDbContextFactory, user, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.IsType<Ok<PagedResults<TodoItemOutput>>>(todoItemsResult);
     }
@@ -29,7 +29,7 @@ public class TodoApiTests
         var testDbContextFactory = new TestDbContextFactory();
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
-        var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 1);
+        var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 1, TestContext.Current.CancellationToken);
 
         Assert.IsType<Ok<TodoItemOutput>>(todoItemResult);
     }
@@ -40,7 +40,7 @@ public class TodoApiTests
         var testDbContextFactory = new TestDbContextFactory();
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
-        var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 100);
+        var todoItemResult = await TodoApi.GetTodoItemById(testDbContextFactory, user, 100, TestContext.Current.CancellationToken);
 
         Assert.IsType<NotFound>(todoItemResult);
     }
@@ -54,7 +54,7 @@ public class TodoApiTests
         var title = "This todo item from Unit test";
         var todoItemInput = new TodoItemInput() { IsCompleted = false, Title = title };
         var todoItemOutputResult = await TodoApi.CreateTodoItem(
-            testDbContextFactory, user, todoItemInput);
+            testDbContextFactory, user, todoItemInput, TestContext.Current.CancellationToken);
 
         Assert.IsType<Created<TodoItemOutput>>(todoItemOutputResult);
         var createdTodoItemOutput = todoItemOutputResult as Created<TodoItemOutput>;
@@ -77,7 +77,7 @@ public class TodoApiTests
         var validationResults = ValidateModel(todoItemInput);
         Assert.True(validationResults.Count > 0);
 
-        var todoItemOutputResult = await TodoApi.CreateTodoItem(testDbContextFactory, user, todoItemInput);
+        var todoItemOutputResult = await TodoApi.CreateTodoItem(testDbContextFactory, user, todoItemInput, TestContext.Current.CancellationToken);
 
         Assert.IsType<ValidationProblem>(todoItemOutputResult);
     }
@@ -97,7 +97,7 @@ public class TodoApiTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
-        var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 1, todoItemInput);
+        var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 1, todoItemInput, TestContext.Current.CancellationToken);
 
         Assert.IsType<NoContent>(result);
         var updateResult = result as NoContent;
@@ -111,7 +111,7 @@ public class TodoApiTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
-        var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 205, todoItemInput);
+        var result = await TodoApi.UpdateTodoItem(testDbContextFactory, user, 205, todoItemInput, TestContext.Current.CancellationToken);
 
         Assert.IsType<NotFound>(result);
         var updateResult = result as NotFound;
@@ -125,7 +125,7 @@ public class TodoApiTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
-        var result = await TodoApi.DeleteTodoItem(testDbContextFactory, user, 1);
+        var result = await TodoApi.DeleteTodoItem(testDbContextFactory, user, 1, TestContext.Current.CancellationToken);
 
         Assert.IsType<NoContent>(result);
         var deleteResult = result as NoContent;
@@ -139,7 +139,7 @@ public class TodoApiTests
         var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "secret-1"));
 
         var todoItemInput = new TodoItemInput() { IsCompleted = true };
-        var result = await TodoApi.DeleteTodoItem(testDbContextFactory, user, 105);
+        var result = await TodoApi.DeleteTodoItem(testDbContextFactory, user, 105, TestContext.Current.CancellationToken);
 
         Assert.IsType<NotFound>(result);
         var deleteResult = result as NotFound;
